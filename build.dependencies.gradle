@@ -1,9 +1,13 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
+    maven { url = 'https://maven.brott.dev/' }
+    maven { url= 'https://maven.pedropathing.com/' }
 }
 
 dependencies {
+    implementation 'com.pedropathing:pedro:[1.0.8]'
+    implementation 'com.acmerobotics.dashboard:dashboard:0.4.16'
     implementation 'org.firstinspires.ftc:Inspection:10.2.0'
     implementation 'org.firstinspires.ftc:Blocks:10.2.0'
     implementation 'org.firstinspires.ftc:RobotCore:10.2.0'
