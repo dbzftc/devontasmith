@@ -1,9 +1,13 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
@@ -15,17 +19,18 @@ public class AdvancedOpMode extends DbzOpMode {
     //motors
     protected DcMotorEx frontLeft, frontRight, backLeft, backRight;
     protected DcMotorEx horiz;
+    protected ColorSensor colorSensor;
+    protected DistanceSensor distanceSensor;
+    protected Limelight3A limelight;
+    protected DcMotorEx turretMotor;
+    protected DcMotorEx hoodMotor;
 
-    //pid
-    double Kp = 0.01; // Proportional gain
-    double Ki = 0.0;  // Integral gain
-    double Kd = 0.0;  // Derivative gain
-    double Kg = 0.0;  // Feedforward gain
+    //angles
+    double turretTargetAngle = 0;  // degrees
+    double hoodTargetAngle = 0;
 
-    double targetPosition = 1000;
-    double integralSum = 0;
-    double lastError = 0;
 
+    //timer
     ElapsedTime timer = new ElapsedTime();
 
 
@@ -39,10 +44,21 @@ public class AdvancedOpMode extends DbzOpMode {
         backLeft = robot.backLeft;
         backRight = robot.backRight;
         horiz = robot.horiz;
+        turretMotor = robot.turretMotor;
+        hoodMotor = robot.hoodMotor;
+
+
+
+
+        //limelight
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        limelight.pipelineSwitch(6);
+        limelight.start();
     }
 
     @Override
     public void opLoop() {
+
      drive();
     }
 
@@ -70,37 +86,14 @@ public class AdvancedOpMode extends DbzOpMode {
         }
         frontLeft.setPower(frontLeftPower * powMult);
         frontRight.setPower(frontRightPower * powMult);
-        backRight.setPower(backLeftPower * powMult);
-        backLeft.setPower(backRightPower * powMult);
+        backLeft.setPower(backLeftPower * powMult);
+        backRight.setPower(backRightPower * powMult);
     }
 
-    private void pidMath(){
-        double currentPosition = robot.horiz.getCurrentPosition();
-        double error = targetPosition - currentPosition;
-
-    // Integral
-        integralSum += error * timer.seconds();
-
-     // Derivative
-        double derivative = (error - lastError) / timer.seconds();
-
-    // PID output
-        double power = Kp * error + Ki * integralSum + Kd * derivative;
-
-
-        double pidOutput = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
-        double ffOutput = Kg; // feedforward
-        double totalOutput = pidOutput + ffOutput;
-
-        totalOutput = Math.max(-1, Math.min(1, totalOutput));
-
-        horiz.setPower(totalOutput);
-
-        lastError = error;
-        timer.reset();
-
-
-
+    private double calculateTurretAngle(double roboX, double roboY, double targetX, double targetY) {
+        double angle = Math.atan2(targetY - roboY, targetX - roboX);
+        angle = Math.toDegrees(angle);
+        return angle;
     }
 
     @Override

@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.extensions;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
@@ -9,6 +12,13 @@ import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzTelemetry;
 
 public abstract class DbzOpMode extends LinearOpMode {
+    protected ColorSensor colorSensor;
+    protected DistanceSensor distanceSensor;
+    protected Limelight3A limelight;
+    protected DcMotorEx turretMotor;
+    protected DcMotorEx hoodMotor;
+
+
     protected DbzTelemetry dbzTelemetry;
     protected DbzGamepad dbzGamepad1, dbzGamepad2;
     protected DbzHardwareMap robot;

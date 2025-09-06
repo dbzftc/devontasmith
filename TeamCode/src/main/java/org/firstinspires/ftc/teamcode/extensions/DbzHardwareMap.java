@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.extensions;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -10,6 +13,11 @@ public class DbzHardwareMap {
     public DcMotorEx frontRight, backRight, backLeft, frontLeft;
     public DcMotorEx horiz, slideMotorL, slideMotorR;
     public Servo xServo, yServo, rotateServo, clawServo;
+    public ColorSensor colorSensor;
+    public DistanceSensor distanceSensor;
+    public Limelight3A limelight;
+    public DcMotorEx turretMotor;
+    public DcMotorEx hoodMotor;
 
     public enum Motor {
         FRONT_RIGHT("frontRight"),
