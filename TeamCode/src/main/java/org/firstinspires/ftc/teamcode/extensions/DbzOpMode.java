@@ -12,11 +12,6 @@ import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzTelemetry;
 
 public abstract class DbzOpMode extends LinearOpMode {
-    protected ColorSensor colorSensor;
-    protected DistanceSensor distanceSensor;
-    protected Limelight3A limelight;
-    protected DcMotorEx turretMotor;
-    protected DcMotorEx hoodMotor;
 
 
     protected DbzTelemetry dbzTelemetry;
@@ -30,7 +25,7 @@ public abstract class DbzOpMode extends LinearOpMode {
     }
 
     @Override
-    public final void runOpMode() {
+    public void runOpMode() {
         dbzTelemetry = new DbzTelemetry(telemetry);
         dbzGamepad1 = new DbzGamepad(gamepad1);
         dbzGamepad2 = new DbzGamepad(gamepad2);
