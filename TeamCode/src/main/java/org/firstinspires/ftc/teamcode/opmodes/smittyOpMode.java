@@ -69,24 +69,30 @@ public class smittyOpMode extends DbzOpMode {
     public static double holdPos = 0.25;
     public static double holdPos2 = 0.05;
 
+    private boolean rbprev=false;
+    private boolean lbprev=false;
+    private ElapsedTime intaketimer = new ElapsedTime();
+
+
 
     @Override
     public void opInit() {
 //        holdServo.setPosition(0.5);
-        frontLeft = robot.frontLeft;
-        frontRight = robot.frontRight;
-        backLeft = robot.backLeft;
-        backRight = robot.backRight;
+        //frontLeft = robot.frontLeft;
+        //frontRight = robot.frontRight;
+       // backLeft = robot.backLeft;
+       // backRight = robot.backRight;
         intakeMotor = robot.intakeMotor;
-        flywheelMotor = robot.flywheelMotor;
+        //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
         holdServo = hardwareMap.get(Servo.class, "holdServo");
 
 
+
         // limelight.pipelineSwitch(0);
         // limelight.start();
-        follower = Constants.createFollower(hardwareMap);
-        pathChain = new PathChain();
+       // follower = Constants.createFollower(hardwareMap);
+       // pathChain = new PathChain();
 
 
 
@@ -98,73 +104,76 @@ public class smittyOpMode extends DbzOpMode {
     public void opLoop() {
 
 
-        drive();
+        //drive();
         //detectionValuesMatcha();
         activeIntake();
-        shoot();
+        //shoot();
+        transfer();
 
 
-        if(dbzGamepad1.dpad_up){
-            holdServo.setPosition(holdPos);
 
-
-        }
-        else if(dbzGamepad1.dpad_down){
-            holdServo.setPosition(holdPos2);
-
-
-        }
-        double x = follower.getPose().getX();
-        double y = follower.getPose().getY();
-        double heading = follower.getPose().getHeading();
-        follower.update();
+//        double x = follower.getPose().getX();
+//        double y = follower.getPose().getY();
+//        double heading = follower.getPose().getHeading();
+//        follower.update();
 
 
     }
 
 
-    private void drive() {
-        double turn = -dbzGamepad1.right_stick_x;
-        double straight = -dbzGamepad1.left_stick_y;
-        double strafe = dbzGamepad1.left_stick_x;
+//    private void drive() {
+//        double turn = -dbzGamepad1.right_stick_x;
+//        double straight = -dbzGamepad1.left_stick_y;
+//        double strafe = dbzGamepad1.left_stick_x;
+//
+//
+//
+//
+//        // Mecanum drive calculations
+//        double frontLeftPower = (straight - strafe - turn);
+//        double frontRightPower = (straight + strafe + turn);
+//        double backLeftPower = (straight + strafe - turn);
+//        double backRightPower = (straight - strafe + turn);
+//
+//
+//        double maxPower = Math.max(
+//                Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
+//                Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
+//        );
+//
+//
+//        if (maxPower > 1.0) {
+//            frontLeftPower /= maxPower;
+//            frontRightPower /= maxPower;
+//            backLeftPower /= maxPower;
+//            backRightPower /= maxPower;
+//        }
+//        frontLeft.setPower(frontLeftPower * powMult);
+//        frontRight.setPower(frontRightPower * powMult);
+//        backLeft.setPower(backLeftPower * powMult);
+//        backRight.setPower(backRightPower * powMult);
+//
+//
+//        if (dbzGamepad1.a) {
+//            pathToShoot = follower.pathBuilder()
+//                    .addPath(new BezierLine(currentPose, parkPose))
+//                    .setLinearHeadingInterpolation(currentPose.getHeading(), parkPose.getHeading())
+//                    .build();
+//        }
+//    }
+
+private void transfer(){
+    if(dbzGamepad1.dpad_up){
+        holdServo.setPosition(holdPos);
 
 
-
-
-        // Mecanum drive calculations
-        double frontLeftPower = (straight - strafe - turn);
-        double frontRightPower = (straight + strafe + turn);
-        double backLeftPower = (straight + strafe - turn);
-        double backRightPower = (straight - strafe + turn);
-
-
-        double maxPower = Math.max(
-                Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
-                Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
-        );
-
-
-        if (maxPower > 1.0) {
-            frontLeftPower /= maxPower;
-            frontRightPower /= maxPower;
-            backLeftPower /= maxPower;
-            backRightPower /= maxPower;
-        }
-        frontLeft.setPower(frontLeftPower * powMult);
-        frontRight.setPower(frontRightPower * powMult);
-        backLeft.setPower(backLeftPower * powMult);
-        backRight.setPower(backRightPower * powMult);
-
-
-        if (dbzGamepad1.a) {
-            pathToShoot = follower.pathBuilder()
-                    .addPath(new BezierLine(currentPose, parkPose))
-                    .setLinearHeadingInterpolation(currentPose.getHeading(), parkPose.getHeading())
-                    .build();
-        }
     }
+    else if(dbzGamepad1.dpad_down){
+        holdServo.setPosition(holdPos2);
 
 
+    }
+}
  /*  private void detectionValuesMatcha() {
 
 
@@ -200,88 +209,64 @@ public class smittyOpMode extends DbzOpMode {
 
 
     private void activeIntake() {
-        ElapsedTime intaketimer = new ElapsedTime();
-        if (dbzGamepad1.right_bumper && !motorRunning) {
-            if (TimeStamp) {
-                intaketimer.reset();
-                TimeStamp = false;
-            }
-            intakeMotor.setPower(1);
-            if (intaketimer.seconds() > 0.5) {
+        boolean rbpress= dbzGamepad1.right_bumper && !rbprev;
+        boolean lbpress = dbzGamepad1.left_bumper && !lbprev;
+        if (rbpress && intaketimer.milliseconds()>100){
+            if (intakeMotor.getPower() != 1){
+                intakeMotor.setPower(1);
                 motorRunning = true;
-                TimeStamp = true;
+
+            } else{
+                intakeMotor.setPower(0);
+                motorRunning= false;
             }
-        } else if (dbzGamepad1.right_bumper && motorRunning) {
-            if (TimeStamp) {
-                intaketimer.reset();
-                TimeStamp = false;
-            }
-            intakeMotor.setPower(0);
-            if (intaketimer.seconds() > 0.5) {
-                motorRunning = false;
-                TimeStamp = true;
-            }
+            intaketimer.reset();
         }
-        if (dbzGamepad1.y) {
-            if (TimeStamp) {
-                intaketimer.reset();
-                TimeStamp = false;
-            }
-            intakeMotor.setPower(-1);
-            if (intaketimer.seconds() > 0.25) {
+        if (lbpress && intaketimer.milliseconds()>100) {
+
+            if (intakeMotor.getPower() != -1) {
+                intakeMotor.setPower(-1);
                 motorRunning = true;
-                TimeStamp = true;
-            }
-        }
-        if (dbzGamepad1.left_bumper && motorRunning) {
-            if (TimeStamp) {
-                intaketimer.reset();
-                TimeStamp = false;
-            }
-            intakeMotor.setPower(0);
-            if (intaketimer.seconds() > 0.25) {
+
+            } else {
+                intakeMotor.setPower(0);
                 motorRunning = false;
-                TimeStamp = true;
             }
+            intaketimer.reset();
         }
     }
 
 
-    private void shoot() {
-        if (dbzGamepad1.a && !flywheelRunning) {
+//        private void shoot () {
+//            if (dbzGamepad1.a && !flywheelRunning) {
+//
+//
+//                shootingTime.reset();
+//                // pathToShoot = follower.pathBuilder()
+//                //         .addPath(new BezierLine(currentPose, shootPose))
+//                //        .setLinearHeadingInterpolation(currentPose.getHeading(),shootPose.getHeading())
+//                //     .build();
+//
+//
+//                flywheelMotor.setPower(flywheelPower);
+//                flywheelRunning = true;
+//
+//
+//                // if(shootingTime.seconds()>5){
+//                //  holdServo.setPosition(holdPos2);
+//                // }
+//
+//
+//                if (dbzGamepad1.x && flywheelRunning) {
+//                    flywheelMotor.setPower(flywheelPowerOff);
+//                    flywheelRunning = false;
+//                }
+//                shootingTime.reset();
+//            }
+//
+//
+//        }
 
-
-            shootingTime.reset();
-            // pathToShoot = follower.pathBuilder()
-            //         .addPath(new BezierLine(currentPose, shootPose))
-            //        .setLinearHeadingInterpolation(currentPose.getHeading(),shootPose.getHeading())
-            //     .build();
-
-
-            flywheelMotor.setPower(flywheelPower);
-            flywheelRunning = true;
-
-
-
-
-
-
-            // if(shootingTime.seconds()>5){
-            //  holdServo.setPosition(holdPos2);
-            // }
-
-
-
-
-            if(dbzGamepad1.x && flywheelRunning) {
-                flywheelMotor.setPower(flywheelPowerOff);
-                flywheelRunning = false;
-            }
-            shootingTime.reset();
-        }
-
-
-    }
 
 
 

@@ -63,13 +63,13 @@ public abstract class jhurts extends DbzOpMode {
 
     @Override
     protected void opInit() {
-        frontLeft = robot.frontLeft;
-        frontRight = robot.frontRight;
-        backLeft = robot.backLeft;
-        backRight = robot.backRight;
-        flywheelMotor = robot.flywheelMotor;
-        transfer1Motor = robot.transfer1Motor;
-        transfer2Motor = robot.transfer2Motor;
+//        frontLeft = robot.frontLeft;
+//        frontRight = robot.frontRight;
+//        backLeft = robot.backLeft;
+//        backRight = robot.backRight;
+//        flywheelMotor = robot.flywheelMotor;
+//        transfer1Motor = robot.transfer1Motor;
+//        transfer2Motor = robot.transfer2Motor;
         intakeMotor = robot.intakeMotor;
 
         follower = Constants.createFollower(hardwareMap);
