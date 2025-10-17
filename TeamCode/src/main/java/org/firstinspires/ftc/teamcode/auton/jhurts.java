@@ -18,10 +18,10 @@ public abstract class jhurts extends DbzOpMode {
     private DcMotorEx frontLeft, frontRight, backLeft, backRight;
     private DcMotorEx flywheelMotor, transfer1Motor, transfer2Motor, intakeMotor;
     private Limelight3A limelight;
+    private int dog;
 
     private Follower follower;
     private ElapsedTime pathTimer = new ElapsedTime();
-
     private int pathState = 0;
     private int shotCount = 0;
     private int tagID = -1;
