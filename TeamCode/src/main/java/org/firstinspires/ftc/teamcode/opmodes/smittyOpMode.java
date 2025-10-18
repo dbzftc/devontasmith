@@ -82,7 +82,7 @@ public class smittyOpMode extends DbzOpMode {
         //frontRight = robot.frontRight;
        // backLeft = robot.backLeft;
        // backRight = robot.backRight;
-        intakeMotor = robot.intakeMotor;
+//        intakeMotor = robot.intakeMotor;
         //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
         holdServo = hardwareMap.get(Servo.class, "holdServo");

@@ -70,7 +70,7 @@ public abstract class jhurts extends DbzOpMode {
 //        flywheelMotor = robot.flywheelMotor;
 //        transfer1Motor = robot.transfer1Motor;
 //        transfer2Motor = robot.transfer2Motor;
-        intakeMotor = robot.intakeMotor;
+//        intakeMotor = robot.intakeMotor;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
