@@ -104,7 +104,7 @@ public class smittyOpMode extends DbzOpMode {
     public void opLoop() {
 
 
-        //drive();
+        drive();
         //detectionValuesMatcha();
         activeIntake();
         //shoot();
@@ -121,46 +121,46 @@ public class smittyOpMode extends DbzOpMode {
     }
 
 
-//    private void drive() {
-//        double turn = -dbzGamepad1.right_stick_x;
-//        double straight = -dbzGamepad1.left_stick_y;
-//        double strafe = dbzGamepad1.left_stick_x;
-//
-//
-//
-//
-//        // Mecanum drive calculations
-//        double frontLeftPower = (straight - strafe - turn);
-//        double frontRightPower = (straight + strafe + turn);
-//        double backLeftPower = (straight + strafe - turn);
-//        double backRightPower = (straight - strafe + turn);
-//
-//
-//        double maxPower = Math.max(
-//                Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
-//                Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
-//        );
-//
-//
-//        if (maxPower > 1.0) {
-//            frontLeftPower /= maxPower;
-//            frontRightPower /= maxPower;
-//            backLeftPower /= maxPower;
-//            backRightPower /= maxPower;
-//        }
-//        frontLeft.setPower(frontLeftPower * powMult);
-//        frontRight.setPower(frontRightPower * powMult);
-//        backLeft.setPower(backLeftPower * powMult);
-//        backRight.setPower(backRightPower * powMult);
-//
-//
-//        if (dbzGamepad1.a) {
-//            pathToShoot = follower.pathBuilder()
-//                    .addPath(new BezierLine(currentPose, parkPose))
-//                    .setLinearHeadingInterpolation(currentPose.getHeading(), parkPose.getHeading())
-//                    .build();
-//        }
-//    }
+    private void drive() {
+        double turn = -dbzGamepad1.right_stick_x;
+        double straight = -dbzGamepad1.left_stick_y;
+        double strafe = dbzGamepad1.left_stick_x;
+
+
+
+
+        // Mecanum drive calculations
+        double frontLeftPower = (straight - strafe - turn);
+        double frontRightPower = (straight + strafe + turn);
+        double backLeftPower = (straight + strafe - turn);
+        double backRightPower = (straight - strafe + turn);
+
+
+        double maxPower = Math.max(
+                Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)),
+                Math.max(Math.abs(backLeftPower), Math.abs(backRightPower))
+        );
+
+
+        if (maxPower > 1.0) {
+            frontLeftPower /= maxPower;
+            frontRightPower /= maxPower;
+            backLeftPower /= maxPower;
+            backRightPower /= maxPower;
+        }
+        frontLeft.setPower(frontLeftPower * powMult);
+        frontRight.setPower(frontRightPower * powMult);
+        backLeft.setPower(backLeftPower * powMult);
+        backRight.setPower(backRightPower * powMult);
+
+
+        if (dbzGamepad1.a) {
+            pathToShoot = follower.pathBuilder()
+                    .addPath(new BezierLine(currentPose, parkPose))
+                    .setLinearHeadingInterpolation(currentPose.getHeading(), parkPose.getHeading())
+                    .build();
+        }
+    }
 
 private void transfer(){
     if(dbzGamepad1.dpad_up){
