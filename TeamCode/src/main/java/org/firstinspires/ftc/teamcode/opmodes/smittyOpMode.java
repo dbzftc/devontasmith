@@ -77,8 +77,8 @@ public class smittyOpMode extends DbzOpMode {
     private PathChain pathToShoot, pathToPark;
 
 
-    public static double holdPos = 0.2;
-    public static double holdPos2 = 0.01;
+    public static double holdPos = 0.3;
+    public static double holdPos2 = 0.15;
 
     private boolean rbprev=false;
     private boolean lbprev=false;
