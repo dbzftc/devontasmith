@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 
+import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import com.arcrobotics.ftclib.controller.PIDController;
 
 import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
@@ -27,14 +28,17 @@ public class smittyOpMode extends DbzOpMode {
 
 
     protected DcMotorEx frontLeft, frontRight, backLeft, backRight;
-    protected DcMotorEx intakeMotor, flywheelMotor;
+    protected DcMotorEx intakeMotor, outtake1Motor, outtake2motor;
+
     protected Limelight3A limelight;
-    protected Servo holdServo;
+    protected Servo holdServo, outtake1, outtake2;
 
 
-    private final double flywheelPower = 0.85;
-    private final double flywheelPowerOff = 0.00;
-    private final double hoodAngle = 58.61;
+    private double flywheelPower = 0.90;
+    private double flywheelPower2 = 0.65;
+    private double flywheelPowerOff=0;
+
+
 
 
     private Follower follower;
@@ -55,6 +59,13 @@ public class smittyOpMode extends DbzOpMode {
     double y;
     double heading;
     private final Pose currentPose = new Pose(x, y, heading);
+    private PIDController outtake1_pid;
+    private PIDController outtake2_pid;
+
+    private double o_p = 0.025, o_i = 0, o_d = 0.0005;
+
+
+
 
 
 
@@ -66,8 +77,8 @@ public class smittyOpMode extends DbzOpMode {
     private PathChain pathToShoot, pathToPark;
 
 
-    public static double holdPos = 0.3;
-    public static double holdPos2 = 0.15;
+    public static double holdPos = 0.2;
+    public static double holdPos2 = 0.01;
 
     private boolean rbprev=false;
     private boolean lbprev=false;
@@ -77,23 +88,37 @@ public class smittyOpMode extends DbzOpMode {
 
     @Override
     public void opInit() {
+
 //        holdServo.setPosition(0.5);
-        //frontLeft = robot.frontLeft;
-        //frontRight = robot.frontRight;
-       // backLeft = robot.backLeft;
-       // backRight = robot.backRight;
+        frontLeft = robot.frontLeft;
+        frontRight = robot.frontRight;
+        backLeft = robot.backLeft;
+        backRight = robot.backRight;
         intakeMotor = robot.intakeMotor;
+        outtake1Motor = robot.outtake1Motor;
+        outtake2motor = robot.outtake2Motor;
         //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
         holdServo = hardwareMap.get(Servo.class, "holdServo");
+//        outtake1 = hardwareMap.get(Servo.class, "outtake1");
+//        outtake2 = hardwareMap.get(Servo.class, "outtake2");
+
+        outtake1_pid = new PIDController(o_p, o_i, o_d);
+        outtake2_pid = new PIDController(o_p, o_i, o_d);
+
+
+
 
 
 
         // limelight.pipelineSwitch(0);
         // limelight.start();
-       // follower = Constants.createFollower(hardwareMap);
-       // pathChain = new PathChain();
-
+        // follower = Constants.createFollower(hardwareMap);
+        // pathChain = new PathChain();
+        outtake1Motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        outtake2motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        outtake1Motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        outtake2motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
 
 
@@ -104,12 +129,12 @@ public class smittyOpMode extends DbzOpMode {
     public void opLoop() {
 
 
+
         drive();
         //detectionValuesMatcha();
         activeIntake();
-        //shoot();
+        shoot();
         transfer();
-
 
 
 //        double x = follower.getPose().getX();
@@ -121,9 +146,10 @@ public class smittyOpMode extends DbzOpMode {
     }
 
 
+
     private void drive() {
         double turn = -dbzGamepad1.right_stick_x;
-        double straight = -dbzGamepad1.left_stick_y;
+        double straight = dbzGamepad1.left_stick_y;
         double strafe = dbzGamepad1.left_stick_x;
 
 
@@ -154,7 +180,7 @@ public class smittyOpMode extends DbzOpMode {
         backRight.setPower(backRightPower * powMult);
 
 
-        if (dbzGamepad1.a) {
+        if (dbzGamepad1.y) {
             pathToShoot = follower.pathBuilder()
                     .addPath(new BezierLine(currentPose, parkPose))
                     .setLinearHeadingInterpolation(currentPose.getHeading(), parkPose.getHeading())
@@ -162,18 +188,18 @@ public class smittyOpMode extends DbzOpMode {
         }
     }
 
-private void transfer(){
-    if(dbzGamepad1.dpad_up){
-        holdServo.setPosition(holdPos);
+    private void transfer(){
+        if(dbzGamepad1.dpad_up){
+            holdServo.setPosition(holdPos);
 
 
+        }
+        else if(dbzGamepad1.dpad_down){
+            holdServo.setPosition(holdPos2);
+
+
+        }
     }
-    else if(dbzGamepad1.dpad_down){
-        holdServo.setPosition(holdPos2);
-
-
-    }
-}
  /*  private void detectionValuesMatcha() {
 
 
@@ -237,35 +263,46 @@ private void transfer(){
     }
 
 
-//        private void shoot () {
-//            if (dbzGamepad1.a && !flywheelRunning) {
-//
-//
-//                shootingTime.reset();
-//                // pathToShoot = follower.pathBuilder()
-//                //         .addPath(new BezierLine(currentPose, shootPose))
-//                //        .setLinearHeadingInterpolation(currentPose.getHeading(),shootPose.getHeading())
-//                //     .build();
-//
-//
-//                flywheelMotor.setPower(flywheelPower);
-//                flywheelRunning = true;
-//
-//
-//                // if(shootingTime.seconds()>5){
-//                //  holdServo.setPosition(holdPos2);
-//                // }
-//
-//
-//                if (dbzGamepad1.x && flywheelRunning) {
-//                    flywheelMotor.setPower(flywheelPowerOff);
-//                    flywheelRunning = false;
-//                }
-//                shootingTime.reset();
-//            }
-//
-//
-//        }
+    private void shoot () {
+        if (dbzGamepad1.a && !flywheelRunning) {
+            shootingTime.reset();
+            outtake1Motor.setPower(flywheelPower);
+            outtake2motor.setPower(flywheelPower);
+
+            flywheelRunning = true;
+
+            shootingTime.reset();
+        }
+        if (dbzGamepad1.b) {
+            shootingTime.reset();
+            outtake1Motor.setPower(flywheelPower2);
+            outtake2motor.setPower(flywheelPower2);
+
+            flywheelRunning = true;
+
+            shootingTime.reset();
+        }
+        if(dbzGamepad1.x && flywheelRunning) {
+            outtake1Motor.setPower(flywheelPowerOff);
+            outtake2motor.setPower(flywheelPowerOff);
+            flywheelRunning = false;
+        }
+        if (dbzGamepad1.dpad_left) {
+            if(flywheelPower>=0.5) {
+                flywheelPower = flywheelPower - 0.05;
+                outtake1Motor.setPower(flywheelPower);
+                outtake2motor.setPower(flywheelPower);
+            }
+        }
+        if(flywheelPower<=0.95) {
+            if (dbzGamepad1.dpad_right) {
+                flywheelPower = flywheelPower + 0.05;
+                outtake1Motor.setPower(flywheelPower);
+                outtake2motor.setPower(flywheelPower);
+            }
+        }
+    }
+
 
 
 

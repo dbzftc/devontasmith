@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class DbzHardwareMap {
 
     public DcMotorEx frontRight, backRight, backLeft, frontLeft;
-//    public DcMotorEx hoodMotor;
+    //    public DcMotorEx hoodMotor;
     public DcMotorEx intakeMotor;
     public DcMotorEx outtake1Motor;
 
@@ -34,7 +34,7 @@ public class DbzHardwareMap {
         backright("backRight"),
         backleft("backLeft"),
         frontleft("frontLeft"),
-//        hood("hoodMotor"),
+        //        hood("hoodMotor"),
         intake("intakeMotor"),
 
         outtake1("outtake1Motor"),
@@ -59,13 +59,10 @@ public class DbzHardwareMap {
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
         holdServo = hwMap.get(Servo.class, "holdServo");
 
-        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        backLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        outtake1Motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        outtake2Motor.setDirection(DcMotorSimple.Direction.FORWARD);
-
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
 //        limelight = hwMap.get(Limelight3A.class, "limelight");
     }
