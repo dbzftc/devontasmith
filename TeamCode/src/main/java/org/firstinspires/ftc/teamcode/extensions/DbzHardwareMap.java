@@ -26,6 +26,8 @@ public class DbzHardwareMap {
 //    private Follower follower;
 
     public Servo holdServo;
+    public Servo shoot1Servo;
+    public Servo shoot2Servo;
     public Servo outtake1;
     public Servo outtake2;
 
@@ -58,6 +60,9 @@ public class DbzHardwareMap {
         outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2.getName());
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
         holdServo = hwMap.get(Servo.class, "holdServo");
+        shoot1Servo = hwMap.get(Servo.class, "shoot1Servo");
+        shoot2Servo = hwMap.get(Servo.class, "shoot2Servo");
+
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);

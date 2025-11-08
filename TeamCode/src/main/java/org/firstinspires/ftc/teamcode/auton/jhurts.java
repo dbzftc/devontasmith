@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 @Autonomous(name="jhurts", group="Autonomous")
-public abstract class jhurts extends DbzOpMode {
+public class jhurts extends DbzOpMode {
     private DcMotorEx frontLeft, frontRight, backLeft, backRight;
     private DcMotorEx flywheelMotor, transfer1Motor, transfer2Motor, intakeMotor;
     private Limelight3A limelight;
@@ -468,6 +468,9 @@ public abstract class jhurts extends DbzOpMode {
     }
     @Override
     protected void opTeardown(){
+    }
+    @Override
+    protected void opLoopHook(){
     }
 }
 

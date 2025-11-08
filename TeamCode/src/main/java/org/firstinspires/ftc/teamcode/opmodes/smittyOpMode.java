@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 
+import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
+
 import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -14,6 +16,16 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+
+import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
@@ -37,6 +49,18 @@ public class smittyOpMode extends DbzOpMode {
     private double flywheelPower = 0.90;
     private double flywheelPower2 = 0.65;
     private double flywheelPowerOff=0;
+
+    public static double kP = 0.0001;
+    public static double kI = 0.0;
+    public static double kD = 0.00001;
+    public static double kF = 0.00042;  // feedforward coefficient (ticks/sec -> power)
+    public static double targetVelocity = -2300; // ticks/sec
+
+    private PIDController controller;
+    private DcMotorEx motor1, motor2;
+    private VoltageSensor batteryVoltageSensor;
+    public static double holdPos = 0.3;
+    public static double holdPos2 = 0.07;
 
 
 
@@ -62,7 +86,6 @@ public class smittyOpMode extends DbzOpMode {
     private PIDController outtake1_pid;
     private PIDController outtake2_pid;
 
-    private double o_p = 0.025, o_i = 0, o_d = 0.0005;
 
 
 
@@ -77,8 +100,7 @@ public class smittyOpMode extends DbzOpMode {
     private PathChain pathToShoot, pathToPark;
 
 
-    public static double holdPos = 0.3;
-    public static double holdPos2 = 0.15;
+
 
     private boolean rbprev=false;
     private boolean lbprev=false;
@@ -103,8 +125,6 @@ public class smittyOpMode extends DbzOpMode {
 //        outtake1 = hardwareMap.get(Servo.class, "outtake1");
 //        outtake2 = hardwareMap.get(Servo.class, "outtake2");
 
-        outtake1_pid = new PIDController(o_p, o_i, o_d);
-        outtake2_pid = new PIDController(o_p, o_i, o_d);
 
 
 
@@ -144,7 +164,6 @@ public class smittyOpMode extends DbzOpMode {
 
 
     }
-
 
 
     private void drive() {
@@ -264,19 +283,24 @@ public class smittyOpMode extends DbzOpMode {
 
 
     private void shoot () {
+        controller.setPID(kP, kI, kD);
+
+        controller.setIntegrationBounds(-0.3,0.3);
+        double currentVelocity = motor2.getVelocity();
+        double pid = controller.calculate(currentVelocity, targetVelocity);
+
+        // Battery compensation for feedforward
+        double batteryVoltage = batteryVoltageSensor.getVoltage();
+        double voltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
+        double feedforward = (kF * targetVelocity) * (12.0 / batteryVoltage);
+
+        double power = pid + feedforward;
+        power = Math.max(-1, Math.min(1, power));
+
         if (dbzGamepad1.a && !flywheelRunning) {
             shootingTime.reset();
-            outtake1Motor.setPower(flywheelPower);
-            outtake2motor.setPower(flywheelPower);
-
-            flywheelRunning = true;
-
-            shootingTime.reset();
-        }
-        if (dbzGamepad1.b) {
-            shootingTime.reset();
-            outtake1Motor.setPower(flywheelPower2);
-            outtake2motor.setPower(flywheelPower2);
+            outtake1Motor.setPower(power);
+            outtake2motor.setPower(power);
 
             flywheelRunning = true;
 
@@ -286,20 +310,6 @@ public class smittyOpMode extends DbzOpMode {
             outtake1Motor.setPower(flywheelPowerOff);
             outtake2motor.setPower(flywheelPowerOff);
             flywheelRunning = false;
-        }
-        if (dbzGamepad1.dpad_left) {
-            if(flywheelPower>=0.5) {
-                flywheelPower = flywheelPower - 0.05;
-                outtake1Motor.setPower(flywheelPower);
-                outtake2motor.setPower(flywheelPower);
-            }
-        }
-        if(flywheelPower<=0.95) {
-            if (dbzGamepad1.dpad_right) {
-                flywheelPower = flywheelPower + 0.05;
-                outtake1Motor.setPower(flywheelPower);
-                outtake2motor.setPower(flywheelPower);
-            }
         }
     }
 
