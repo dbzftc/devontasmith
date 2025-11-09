@@ -7,6 +7,7 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
@@ -25,11 +26,16 @@ public class flywheelTest extends DbzOpMode {
     private VoltageSensor batteryVoltageSensor;
     public static double holdPos = 0.3;
     public static double holdPos2 = 0.15;
+    private Servo shoot1Servo;
+    private Servo shoot2Servo;
+    public static double shootPos = 0.5;
 
     @Override
     protected void opInit() {
         motor1 = hardwareMap.get(DcMotorEx.class, "outtake1Motor");
         motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
+//        shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
+//        shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
 
         motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -96,6 +102,8 @@ public class flywheelTest extends DbzOpMode {
         telemetry.addData("Power", power);
         telemetry.addData("Battery Voltage", batteryVoltage);
         telemetry.update();
+//        shoot1Servo.setPosition(shootPos);
+//        shoot2Servo.setPosition(shootPos);
     }
 
     @Override

@@ -54,7 +54,7 @@ public class smittyOpMode extends DbzOpMode {
     public static double kI = 0.0;
     public static double kD = 0.00001;
     public static double kF = 0.00042;  // feedforward coefficient (ticks/sec -> power)
-    public static double targetVelocity = -2300; // ticks/sec
+    public static double targetVelocity = -1600; // ticks/sec
 
     private PIDController controller;
     private DcMotorEx motor1, motor2;
@@ -140,6 +140,19 @@ public class smittyOpMode extends DbzOpMode {
         outtake1Motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         outtake2motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
+
+        motor1 = outtake1Motor;
+        motor2 = outtake2motor;
+
+
+// ✅ Initialize PID controller
+        controller = new PIDController(kP, kI, kD);
+
+
+// ✅ Initialize voltage sensor safely
+        if (hardwareMap.voltageSensor.iterator().hasNext()) {
+            batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+        }
 
 
     }
@@ -299,7 +312,7 @@ public class smittyOpMode extends DbzOpMode {
 
         if (dbzGamepad1.a && !flywheelRunning) {
             shootingTime.reset();
-            outtake1Motor.setPower(power);
+            outtake1Motor.setPower(-power);
             outtake2motor.setPower(power);
 
             flywheelRunning = true;
