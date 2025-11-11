@@ -50,17 +50,21 @@ public class smittyOpMode extends DbzOpMode {
     private double flywheelPower2 = 0.65;
     private double flywheelPowerOff=0;
 
-    public static double kP = 0.0001;
+    public static double kP = 0.00014;
     public static double kI = 0.0;
-    public static double kD = 0.00001;
-    public static double kF = 0.00042;  // feedforward coefficient (ticks/sec -> power)
-    public static double targetVelocity = -1600; // ticks/sec
+    public static double kD = 0.000012;
+    public static double kF = 0.00043;  // feedforward coefficient (ticks/sec -> power)
+    public static double targetVelocity = -2100; // ticks/sec
 
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     private VoltageSensor batteryVoltageSensor;
     public static double holdPos = 0.3;
-    public static double holdPos2 = 0.07;
+    public static double holdPos2 = 0.12;
+    public static double shootPos = 0.0;
+    private Servo shoot1Servo;
+    private Servo shoot2Servo;
+
 
 
 
@@ -125,6 +129,9 @@ public class smittyOpMode extends DbzOpMode {
 //        outtake1 = hardwareMap.get(Servo.class, "outtake1");
 //        outtake2 = hardwareMap.get(Servo.class, "outtake2");
 
+        shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
+        shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
+
 
 
 
@@ -180,8 +187,8 @@ public class smittyOpMode extends DbzOpMode {
 
 
     private void drive() {
-        double turn = -dbzGamepad1.right_stick_x;
-        double straight = dbzGamepad1.left_stick_y;
+        double turn = dbzGamepad1.right_stick_x;
+        double straight = -dbzGamepad1.left_stick_y;
         double strafe = dbzGamepad1.left_stick_x;
 
 
@@ -221,15 +228,25 @@ public class smittyOpMode extends DbzOpMode {
     }
 
     private void transfer(){
-        if(dbzGamepad1.dpad_up){
-            holdServo.setPosition(holdPos);
+        if(dbzGamepad1.right_trigger>0.1){
+            robot.holdServo.setPosition(holdPos);
 
 
         }
+        else if(dbzGamepad1.left_trigger>0.1){
+            robot.holdServo.setPosition(holdPos2);
+
+
+        }
+
+        shoot1Servo.setPosition(shootPos);
+        shoot2Servo.setPosition(shootPos);
+
+        if(dbzGamepad1.dpad_up){
+            shootPos+=0.01;
+        }
         else if(dbzGamepad1.dpad_down){
-            holdServo.setPosition(holdPos2);
-
-
+            shootPos-=0.01;
         }
     }
  /*  private void detectionValuesMatcha() {
