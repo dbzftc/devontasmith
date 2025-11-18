@@ -28,6 +28,8 @@ public class DbzHardwareMap {
     public Servo holdServo;
     public Servo shoot1Servo;
     public Servo shoot2Servo;
+
+    public Servo pushServo;
     public Servo outtake1;
     public Servo outtake2;
 
@@ -62,6 +64,7 @@ public class DbzHardwareMap {
         holdServo = hwMap.get(Servo.class, "holdServo");
         shoot1Servo = hwMap.get(Servo.class, "shoot1Servo");
         shoot2Servo = hwMap.get(Servo.class, "shoot2Servo");
+        pushServo = hwMap.get(Servo.class, "pushServo");
 
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);

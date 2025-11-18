@@ -34,8 +34,8 @@ public class jhurts extends DbzOpMode {
     public static double kD = 0.000012;
     public static double kF = 0.00043;
     public static double targetVelocity = -1700;
-    public static double holdPos = 0.12;
-    public static double holdPos2 = 0.3;
+    public static double holdPos = 0.3;
+    public static double holdPos2 = 0.12;
     public static double shootPos = 0.0;
 
     @Override
@@ -84,9 +84,8 @@ public class jhurts extends DbzOpMode {
 
         switch (pathState) {
             case 0:
-                robot.holdServo.setPosition(holdPos2);
                 if (!follower.isBusy() && pathTimer.seconds() > 2) {
-                    robot.holdServo.setPosition(holdPos);
+
                     follower.followPath(paths.Path1, true);
                     pathTimer.reset();
                     pathState = 1;

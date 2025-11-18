@@ -43,7 +43,9 @@ public class smittyOpMode extends DbzOpMode {
     protected DcMotorEx intakeMotor, outtake1Motor, outtake2motor;
 
     protected Limelight3A limelight;
-    protected Servo holdServo, outtake1, outtake2;
+    protected Servo holdServo, shoot1Servo, shoot2Servo, pushServo;
+
+
 
 
     private double flywheelPower = 0.90;
@@ -54,7 +56,7 @@ public class smittyOpMode extends DbzOpMode {
     public static double kI = 0.0;
     public static double kD = 0.000012;
     public static double kF = 0.00043;  // feedforward coefficient (ticks/sec -> power)
-    public static double targetVelocity = -2100; // ticks/sec
+    public static double targetVelocity = -1685; // ticks/sec
 
     private PIDController controller;
     private DcMotorEx motor1, motor2;
@@ -62,8 +64,7 @@ public class smittyOpMode extends DbzOpMode {
     public static double holdPos = 0.3;
     public static double holdPos2 = 0.12;
     public static double shootPos = 0.0;
-    private Servo shoot1Servo;
-    private Servo shoot2Servo;
+
 
 
 
@@ -110,6 +111,8 @@ public class smittyOpMode extends DbzOpMode {
     private boolean lbprev=false;
     private ElapsedTime intaketimer = new ElapsedTime();
 
+    private ElapsedTime shoottimer = new ElapsedTime();
+
 
 
     @Override
@@ -131,9 +134,10 @@ public class smittyOpMode extends DbzOpMode {
 
         shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
         shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
+        pushServo = hardwareMap.get(Servo.class, "pushServo");
 
 
-
+        robot.pushServo.setPosition(0.2);
 
 
 
@@ -230,12 +234,16 @@ public class smittyOpMode extends DbzOpMode {
     private void transfer(){
         if(dbzGamepad1.right_trigger>0.1){
             robot.holdServo.setPosition(holdPos);
+                robot.pushServo.setPosition(0.75);
+
+
 
 
         }
         else if(dbzGamepad1.left_trigger>0.1){
-            robot.holdServo.setPosition(holdPos2);
 
+            robot.holdServo.setPosition(holdPos2);
+            robot.pushServo.setPosition(0.2);
 
         }
 
@@ -286,7 +294,7 @@ public class smittyOpMode extends DbzOpMode {
     private void activeIntake() {
         boolean rbpress= dbzGamepad1.right_bumper && !rbprev;
         boolean lbpress = dbzGamepad1.left_bumper && !lbprev;
-        if (rbpress && intaketimer.milliseconds()>100){
+        if (rbpress && intaketimer.milliseconds()>1){
             if (intakeMotor.getPower() != 1){
                 intakeMotor.setPower(1);
                 motorRunning = true;
@@ -297,7 +305,7 @@ public class smittyOpMode extends DbzOpMode {
             }
             intaketimer.reset();
         }
-        if (lbpress && intaketimer.milliseconds()>100) {
+        if (lbpress && intaketimer.milliseconds()>1) {
 
             if (intakeMotor.getPower() != -1) {
                 intakeMotor.setPower(-1);

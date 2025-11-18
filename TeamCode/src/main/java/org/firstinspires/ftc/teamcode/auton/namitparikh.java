@@ -25,7 +25,7 @@ public class namitparikh extends DbzOpMode {
     private Paths paths;
     private PIDController controller;
 
-    protected Servo holdServo, shoot1Servo, shoot2Servo;
+    protected Servo holdServo, shoot1Servo, shoot2Servo, pushServo;
     private VoltageSensor batteryVoltageSensor;
 
     protected DcMotorEx intakeMotor, outtake1Motor, outtake2Motor;
@@ -43,10 +43,13 @@ public class namitparikh extends DbzOpMode {
         intakeMotor = robot.intakeMotor;
         outtake1Motor = robot.outtake1Motor;
         outtake2Motor = robot.outtake2Motor;
+        robot.holdServo.setPosition(0.2);
 
         holdServo = hardwareMap.get(Servo.class, "holdServo");
         shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
         shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
+
+        pushServo = hardwareMap.get(Servo.class, "pushServo");
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(21.084, 123.813, Math.toRadians(142)));
@@ -63,6 +66,7 @@ public class namitparikh extends DbzOpMode {
 
     @Override
     protected void opLoop() {
+
         follower.update();
         controller.setPID(kP, kI, kD);
         outtake2Motor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -84,21 +88,27 @@ public class namitparikh extends DbzOpMode {
 
         switch (pathState) {
             case 0:
-//                robot.holdServo.setPosition(holdPos2);
                 if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
-//                    robot.holdServo.setPosition(holdPos);
                     follower.followPath(paths.Path1, true);
                     pathTimer.reset();
                     pathState = 1;
                 }
                 break;
+
             case 1:
-                if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
-                    follower.followPath(paths.Path2, true);
-                    pathTimer.reset();
-                    pathState = 2;
+                if (!follower.isBusy()) {
+                    robot.holdServo.setPosition(holdPos2);
+                    robot.pushServo.setPosition(0.75);
+                    if (pathTimer.seconds() > 5.0) {
+                        robot.pushServo.setPosition(0.2);
+                        robot.holdServo.setPosition(holdPos);
+                        follower.followPath(paths.Path2, true);
+                        pathTimer.reset();
+                        pathState = 2;
+                    }
                 }
                 break;
+
             case 2:
                 if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
                     follower.followPath(paths.Path3, true);
@@ -106,6 +116,7 @@ public class namitparikh extends DbzOpMode {
                     pathState = 3;
                 }
                 break;
+
             case 3:
                 if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
                     follower.followPath(paths.Path4, true);
@@ -113,48 +124,53 @@ public class namitparikh extends DbzOpMode {
                     pathState = 4;
                 }
                 break;
+
             case 4:
-                if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
-                    follower.followPath(paths.Path5, true);
-                    pathTimer.reset();
-                    pathState = 5;
+                if (!follower.isBusy()) {
+                    robot.holdServo.setPosition(holdPos2);
+                    robot.pushServo.setPosition(0.75);
+                    if (pathTimer.seconds() > 5.0) {
+                        robot.pushServo.setPosition(0.2);
+                        robot.holdServo.setPosition(holdPos);
+                        follower.followPath(paths.Path5, true);
+                        pathTimer.reset();
+                        pathState = 5;
+                    }
                 }
                 break;
 
             case 5:
-                if (!follower.isBusy() && pathTimer.seconds() > 5) {
+                if (!follower.isBusy() && pathTimer.seconds() > 2) {
                     follower.followPath(paths.Path6, true);
-                    if (pathTimer.seconds() > 6) {
-                        robot.holdServo.setPosition(holdPos2);
-                        pathTimer.reset();
-                        pathState = 6;
-                    }
+                    pathTimer.reset();
+                    pathState = 6;
                 }
                 break;
 
             case 6:
-                if (!follower.isBusy() && pathTimer.seconds() > 3) {
-                    robot.holdServo.setPosition(holdPos);
-                    follower.followPath(paths.Path7, true);
-                    pathTimer.reset();
-                    pathState = 7;
-                }
-                break;
-
-            case 7:
-                if (!follower.isBusy() && pathTimer.seconds() > 5) {
-                    follower.followPath(paths.Path8, true);
-                    if (pathTimer.seconds() > 6) {
-                        robot.holdServo.setPosition(holdPos2);
+                if (!follower.isBusy()) {
+                    robot.holdServo.setPosition(holdPos2);
+                    robot.pushServo.setPosition(0.75);
+                    if (pathTimer.seconds() > 5.0) {
+                        robot.pushServo.setPosition(0.2);
+                        robot.holdServo.setPosition(holdPos);
+                        follower.followPath(paths.Path7, true);
                         pathTimer.reset();
-                        pathState = 8;
+                        pathState = 7;
                     }
                 }
                 break;
 
+            case 7:
+                if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
+                    follower.followPath(paths.Path8, true);
+                    pathTimer.reset();
+                    pathState = 8;
+                }
+                break;
+
             case 8:
-                if (!follower.isBusy() && pathTimer.seconds() > 3) {
-                    robot.holdServo.setPosition(holdPos);
+                if (!follower.isBusy() && pathTimer.seconds() > 2) {
                     follower.followPath(paths.Path9, true);
                     pathTimer.reset();
                     pathState = 9;
@@ -165,7 +181,7 @@ public class namitparikh extends DbzOpMode {
                 if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
                     follower.followPath(paths.Path10, true);
                     pathTimer.reset();
-                    pathState = 10;
+                    pathState = 10; n
                 }
                 break;
 
@@ -202,10 +218,16 @@ public class namitparikh extends DbzOpMode {
                 break;
 
             case 14:
-                if (!follower.isBusy() && pathTimer.seconds() > 0.5) {
-                    follower.followPath(paths.Path15, true);
-                    pathTimer.reset();
-                    pathState = 15;
+                if (!follower.isBusy()) {
+                    robot.holdServo.setPosition(holdPos2);
+                    robot.pushServo.setPosition(0.75);
+                    if (pathTimer.seconds() > 2.0) {
+                        robot.pushServo.setPosition(0.2);
+                        robot.holdServo.setPosition(holdPos);
+                        follower.followPath(paths.Path15, true);
+                        pathTimer.reset();
+                        pathState = 15;
+                    }
                 }
                 break;
 
@@ -215,6 +237,9 @@ public class namitparikh extends DbzOpMode {
                 }
                 break;
         }
+
+
+
     }
 
     @Override
@@ -292,7 +317,7 @@ public class namitparikh extends DbzOpMode {
                             )
                     )
                     .setLinearHeadingInterpolation(
-                            Math.toRadians(1340),
+                            Math.toRadians(180),
                             Math.toRadians(135)
                     )
                     .build();
@@ -301,12 +326,12 @@ public class namitparikh extends DbzOpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(11.736, 62.456),
+                                    new Pose(11.736, 65.456),
                                     new Pose(79.360, 65.635),
                                     new Pose(48.333, 95.867)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(135))
+                    .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(135))
                     .build();
 
             Path7 = follower
@@ -315,22 +340,22 @@ public class namitparikh extends DbzOpMode {
                             new BezierCurve(
                                     new Pose(48.333, 95.867),
                                     new Pose(51.913, 37.790),
-                                    new Pose(11.935, 62.456)
+                                    new Pose(11.935, 65.456)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(150))
+                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(155))
                     .build();
 
             Path8 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(11.935, 62.456),
+                                    new Pose(11.935, 65.456),
                                     new Pose(79.360, 79.360),
                                     new Pose(48.333, 95.867)
                             )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(135))
+                    .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(135))
                     .build();
 
             Path9 = follower

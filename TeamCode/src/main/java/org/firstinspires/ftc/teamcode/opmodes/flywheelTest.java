@@ -83,16 +83,20 @@ public class flywheelTest extends DbzOpMode {
 
         motor1.setPower(power);
         motor2.setPower(power);
-            if(dbzGamepad1.left_trigger>0.1){
-                robot.holdServo.setPosition(holdPos);
+        if(dbzGamepad1.right_trigger>0.1){
+            robot.holdServo.setPosition(holdPos);
+            robot.pushServo.setPosition(0.75);
 
 
-            }
-            else if(dbzGamepad1.right_trigger>0.1){
-                robot.holdServo.setPosition(holdPos2);
 
 
-            }
+        }
+        else if(dbzGamepad1.left_trigger>0.1){
+
+            robot.holdServo.setPosition(holdPos2);
+            robot.pushServo.setPosition(0.2);
+
+        }
 
 
 
