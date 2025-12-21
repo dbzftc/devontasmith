@@ -34,40 +34,36 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 import java.util.List;
 
 
-@TeleOp(name = "smittyOpMode")
-public class smittyOpMode extends DbzOpMode {
+@TeleOp(name = "waterqualityOpMode")
+public class waterqualityOpMode extends DbzOpMode {
     private final double powMult = 1.0;
 
 
     protected DcMotorEx frontLeft, frontRight, backLeft, backRight;
-    protected DcMotorEx intakeMotor, outtake1Motor, outtake2motor;
+    protected DcMotorEx intakeMotor, turret;
 
     protected Limelight3A limelight;
-    protected Servo holdServo, shoot1Servo, shoot2Servo, pushServo;
-
-
-
-    private double flywheelPower = 0.90;
-    private double flywheelPower2 = 0.65;
-    private double flywheelPowerOff=0;
-
-    public static double kP = 0.00014;
-    public static double kI = 0.0;
-    public static double kD = 0.000012;
-    public static double kF = 0.00043;  // feedforward coefficient (ticks/sec -> power)
-    public static double targetVelocity = -1685; // ticks/sec
+//    protected Servo holdServo;
+    protected Servo rightpushServo, leftpushServo;
+//
+//    private double flywheelPower = 0.90;
+//    private double flywheelPower2 = 0.65;
+//    private double flywheelPowerOff=0;
+//
+//    public static double kP = 0.00014;
+//    public static double kI = 0.0;
+//    public static double kD = 0.000012;
+//    public static double kF = 0.00043;  // feedforward coefficient (ticks/sec -> power)
+//    public static double targetVelocity = -2100; // ticks/sec
 
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     private VoltageSensor batteryVoltageSensor;
-    public static double holdPos = 0.3;
-    public static double holdPos2 = 0.12;
-    public static double shootPos = 0.0;
-
-
-
-
-
+//    public static double holdPos = 0.3;
+//    public static double holdPos2 = 0.12;
+//    public static double shootPos = 0.0;
+//    private Servo shoot1Servo;
+//    private Servo shoot2Servo;
 
     private Follower follower;
     private PathChain pathChain;
@@ -79,7 +75,10 @@ public class smittyOpMode extends DbzOpMode {
     private boolean flywheelRunning = false;
     private boolean TimeStamp = true;
     private boolean ShooterTimeStamp = true;
-
+    private boolean leftTriggerLast = false;
+    private boolean rightTriggerLast = false;
+    private boolean shootLast = false;
+    private boolean shooting = false;
 
 
 
@@ -93,10 +92,6 @@ public class smittyOpMode extends DbzOpMode {
 
 
 
-
-
-
-
     private double tx, ty, ta;
     private ElapsedTime shootingTime = new ElapsedTime();
     private final Pose shootPose = new Pose(67, 67, Math.toRadians(67));
@@ -104,13 +99,9 @@ public class smittyOpMode extends DbzOpMode {
     private PathChain pathToShoot, pathToPark;
 
 
-
-
-    private boolean rbprev=false;
-    private boolean lbprev=false;
+    private boolean rtprev=false;
+    private boolean ltprev=false;
     private ElapsedTime intaketimer = new ElapsedTime();
-
-    private ElapsedTime shoottimer = new ElapsedTime();
 
 
 
@@ -122,21 +113,24 @@ public class smittyOpMode extends DbzOpMode {
         frontRight = robot.frontRight;
         backLeft = robot.backLeft;
         backRight = robot.backRight;
-        intakeMotor = robot.intakeMotor;;
+        intakeMotor = robot.intakeMotor;
+        turret = robot.turret;
+
+        rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
+        leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
 //        outtake1Motor = robot.outtake1Motor;
 //        outtake2motor = robot.outtake2Motor;
         //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
-        holdServo = hardwareMap.get(Servo.class, "holdServo");
+//        holdServo = hardwareMap.get(Servo.class, "holdServo");
 //        outtake1 = hardwareMap.get(Servo.class, "outtake1");
 //        outtake2 = hardwareMap.get(Servo.class, "outtake2");
+//
+//        shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
+//        shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
 
-        shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
-        shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
-        pushServo = hardwareMap.get(Servo.class, "pushServo");
 
 
-        robot.pushServo.setPosition(0.2);
 
 
 
@@ -145,18 +139,18 @@ public class smittyOpMode extends DbzOpMode {
         // limelight.start();
         // follower = Constants.createFollower(hardwareMap);
         // pathChain = new PathChain();
-        outtake1Motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        outtake2motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        outtake1Motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        outtake2motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+//        outtake1Motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        outtake2motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        outtake1Motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+//        outtake2motor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
-
-        motor1 = outtake1Motor;
-        motor2 = outtake2motor;
+//
+//        motor1 = outtake1Motor;
+//        motor2 = outtake2motor;
 
 
 // ✅ Initialize PID controller
-        controller = new PIDController(kP, kI, kD);
+//        controller = new PIDController(kP, kI, kD);
 
 
 // ✅ Initialize voltage sensor safely
@@ -231,126 +225,61 @@ public class smittyOpMode extends DbzOpMode {
     }
 
     private void transfer(){
-        if(dbzGamepad1.right_trigger>0.1){
-            robot.holdServo.setPosition(holdPos);
-                robot.pushServo.setPosition(0.75);
-
-
-
-
-        }
-        else if(dbzGamepad1.left_trigger>0.1){
-
-            robot.holdServo.setPosition(holdPos2);
-            robot.pushServo.setPosition(0.2);
-
-        }
-
-        shoot1Servo.setPosition(shootPos);
-        shoot2Servo.setPosition(shootPos);
-
-        if(dbzGamepad1.dpad_up){
-            shootPos+=0.01;
-        }
-        else if(dbzGamepad1.dpad_down){
-            shootPos-=0.01;
-        }
     }
- /*  private void detectionValuesMatcha() {
-
-
-       LLResult result = limelight.getLatestResult();
-
-
-       if (result != null) {
-           if (result.isValid()) {
-
-
-               List<LLResultTypes.DetectorResult> detectorResults = result.getDetectorResults();
-
-
-               if (detectorResults != null) {
-                   for (LLResultTypes.DetectorResult dr : detectorResults) {
-
-
-                       tx = dr.getTargetXDegrees();
-                       ty = dr.getTargetYDegrees();
-                       ta = dr.getTargetArea();
-                   }
-                   if (detectorResults.isEmpty()) {
-                       objectDet7yg ected = false;
-                   } else {
-                       objectDetected = true;
-                   }
-               }
-
-
-           }
-       }
-   }  */
-
 
     private void activeIntake() {
-        boolean rbpress= dbzGamepad1.right_bumper && !rbprev;
-        boolean lbpress = dbzGamepad1.left_bumper && !lbprev;
-        if (rbpress && intaketimer.milliseconds()>1){
-            if (intakeMotor.getPower() != 1){
-                intakeMotor.setPower(1);
-                motorRunning = true;
 
-            } else{
-                intakeMotor.setPower(0);
-                motorRunning= false;
-            }
-            intaketimer.reset();
+        boolean leftTriggerHeld  = dbzGamepad1.left_trigger > 0.1;
+        boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
+
+        if (rightTriggerHeld) {
+            intakeMotor.setPower(1);
+            leftpushServo.setPosition(0.25);
+            rightpushServo.setPosition(0.21);
         }
-        if (lbpress && intaketimer.milliseconds()>1) {
 
-            if (intakeMotor.getPower() != -1) {
-                intakeMotor.setPower(-1);
-                motorRunning = true;
-
-            } else {
-                intakeMotor.setPower(0);
-                motorRunning = false;
-            }
-            intaketimer.reset();
+        if (leftTriggerHeld) {
+            intakeMotor.setPower(-1);
+            leftpushServo.setPosition(0.25);
+            rightpushServo.setPosition(0.21);
         }
+
+        if (!leftTriggerHeld && leftTriggerLast) {
+            intakeMotor.setPower(0);
+            leftpushServo.setPosition(0.30);
+            rightpushServo.setPosition(0.26);
+        }
+
+        if (!rightTriggerHeld && rightTriggerLast) {
+            intakeMotor.setPower(0);
+            leftpushServo.setPosition(0.30);
+            rightpushServo.setPosition(0.26);
+        }
+
+        leftTriggerLast  = leftTriggerHeld;
+        rightTriggerLast = rightTriggerHeld;
     }
 
+    private void shoot() {
+        boolean shootPressed = dbzGamepad1.right_bumper;
 
-    private void shoot () {
-        controller.setPID(kP, kI, kD);
+        if (shootPressed && !shootLast && !shooting) {
+            leftpushServo.setPosition(0.9);
+            rightpushServo.setPosition(0.86);
 
-        controller.setIntegrationBounds(-0.3,0.3);
-        double currentVelocity = motor2.getVelocity();
-        double pid = controller.calculate(currentVelocity, targetVelocity);
-
-        // Battery compensation for feedforward
-        double batteryVoltage = batteryVoltageSensor.getVoltage();
-        double voltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
-        double feedforward = (kF * targetVelocity) * (12.0 / batteryVoltage);
-
-        double power = pid + feedforward;
-        power = Math.max(-1, Math.min(1, power));
-
-        if (dbzGamepad1.a && !flywheelRunning) {
-            shootingTime.reset();
-            outtake1Motor.setPower(-power);
-            outtake2motor.setPower(power);
-
-            flywheelRunning = true;
-
-            shootingTime.reset();
+            intaketimer.reset();
+            shooting = true;
         }
-        if(dbzGamepad1.x && flywheelRunning) {
-            outtake1Motor.setPower(flywheelPowerOff);
-            outtake2motor.setPower(flywheelPowerOff);
-            flywheelRunning = false;
+
+        if (shooting && intaketimer.milliseconds() > 200) {
+            leftpushServo.setPosition(0.25);   // OPEN again (idle)
+            rightpushServo.setPosition(0.21);
+
+            shooting = false;
         }
+
+        shootLast = shootPressed;
     }
-
-
 
 
 

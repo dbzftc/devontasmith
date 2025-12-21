@@ -41,8 +41,8 @@ public class jhurts extends DbzOpMode {
     @Override
     protected void opInit() {
         intakeMotor = robot.intakeMotor;
-        outtake1Motor = robot.outtake1Motor;
-        outtake2Motor = robot.outtake2Motor;
+//        outtake1Motor = robot.outtake1Motor;
+//        outtake2Motor = robot.outtake2Motor;
 
         holdServo = hardwareMap.get(Servo.class, "holdServo");
         shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");

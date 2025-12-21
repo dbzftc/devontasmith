@@ -14,9 +14,9 @@ public class DbzHardwareMap {
     public DcMotorEx frontRight, backRight, backLeft, frontLeft;
     //    public DcMotorEx hoodMotor;
     public DcMotorEx intakeMotor;
-    public DcMotorEx outtake1Motor;
-
-    public DcMotorEx outtake2Motor;
+//    public DcMotorEx outtake1Motor;
+//
+//    public DcMotorEx outtake2Motor;
 //    public DcMotorEx transfer1Motor;
 //    public DcMotorEx transfer2Motor;
 //    public DcMotorEx flywheelMotor;
@@ -28,10 +28,12 @@ public class DbzHardwareMap {
     public Servo holdServo;
     public Servo shoot1Servo;
     public Servo shoot2Servo;
-
-    public Servo pushServo;
     public Servo outtake1;
     public Servo outtake2;
+    public DcMotorEx turret;
+    public Servo rightpushServo;
+    public Servo leftpushServo;
+
 
     public enum Motor {
         frontright("frontRight"),
@@ -42,7 +44,10 @@ public class DbzHardwareMap {
         intake("intakeMotor"),
 
         outtake1("outtake1Motor"),
-        outtake2("outtake2Motor");
+        outtake2("outtake2Motor"),
+        turret("turret"),
+        rightpushServo("rightpushServo"),
+        leftpushServo("leftpushServo");
 //        flywheel("flywheelMotor");
 
         private final String name;
@@ -55,16 +60,19 @@ public class DbzHardwareMap {
         backRight = hwMap.get(DcMotorEx.class, Motor.backright.getName());
         backLeft = hwMap.get(DcMotorEx.class, Motor.backleft.getName());
         frontLeft = hwMap.get(DcMotorEx.class, Motor.frontleft.getName());
+
+        turret = hwMap.get(DcMotorEx.class, Motor.turret.getName());
 //
 //        hoodMotor = hwMap.get(DcMotorEx.class, Motor.hood.getName());
         intakeMotor = hwMap.get(DcMotorEx.class, Motor.intake.getName());
-        outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1.getName());
-        outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2.getName());
+        rightpushServo = hwMap.get(Servo.class, "rightpushServo");
+        leftpushServo = hwMap.get(Servo.class, "leftpushServo");
+//        outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1.getName());
+//        outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2.getName());
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
-        holdServo = hwMap.get(Servo.class, "holdServo");
-        shoot1Servo = hwMap.get(Servo.class, "shoot1Servo");
-        shoot2Servo = hwMap.get(Servo.class, "shoot2Servo");
-        pushServo = hwMap.get(Servo.class, "pushServo");
+//        holdServo = hwMap.get(Servo.class, "holdServo");
+//        shoot1Servo = hwMap.get(Servo.class, "shoot1Servo");
+//        shoot2Servo = hwMap.get(Servo.class, "shoot2Servo");
 
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
