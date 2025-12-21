@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 
-import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
+//import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
 
 import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
@@ -46,6 +46,7 @@ public class smittyOpMode extends DbzOpMode {
     protected Servo holdServo, shoot1Servo, shoot2Servo, pushServo;
 
 
+    private GoBILDA_Pinpoint pinpoint;
 
     private double flywheelPower = 0.90;
     private double flywheelPower2 = 0.65;
@@ -136,7 +137,7 @@ public class smittyOpMode extends DbzOpMode {
         pushServo = hardwareMap.get(Servo.class, "pushServo");
 
 
-        robot.pushServo.setPosition(0.2);
+//        robot.pushServo.setPosition(0.2);
 
 
 
@@ -233,7 +234,7 @@ public class smittyOpMode extends DbzOpMode {
     private void transfer(){
         if(dbzGamepad1.right_trigger>0.1){
             robot.holdServo.setPosition(holdPos);
-                robot.pushServo.setPosition(0.75);
+//                robot.pushServo.setPosition(0.75);
 
 
 
@@ -242,7 +243,7 @@ public class smittyOpMode extends DbzOpMode {
         else if(dbzGamepad1.left_trigger>0.1){
 
             robot.holdServo.setPosition(holdPos2);
-            robot.pushServo.setPosition(0.2);
+//            robot.pushServo.setPosition(0.2);
 
         }
 

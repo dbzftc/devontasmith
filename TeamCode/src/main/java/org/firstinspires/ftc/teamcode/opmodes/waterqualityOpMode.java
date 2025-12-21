@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 
-import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
+//import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
 
 import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
@@ -37,10 +37,11 @@ import java.util.List;
 @TeleOp(name = "waterqualityOpMode")
 public class waterqualityOpMode extends DbzOpMode {
     private final double powMult = 1.0;
+    private double power = 0.8;
 
 
     protected DcMotorEx frontLeft, frontRight, backLeft, backRight;
-    protected DcMotorEx intakeMotor, turret;
+    protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
 
     protected Limelight3A limelight;
 //    protected Servo holdServo;
@@ -69,6 +70,7 @@ public class waterqualityOpMode extends DbzOpMode {
     private PathChain pathChain;
 
 
+
     private boolean shotFired = false;
     private boolean objectDetected = false;
     private boolean motorRunning = false;
@@ -77,8 +79,11 @@ public class waterqualityOpMode extends DbzOpMode {
     private boolean ShooterTimeStamp = true;
     private boolean leftTriggerLast = false;
     private boolean rightTriggerLast = false;
+    private boolean leftBumperLast = false;
+
     private boolean shootLast = false;
     private boolean shooting = false;
+    private boolean Shooting = false;
 
 
 
@@ -118,8 +123,8 @@ public class waterqualityOpMode extends DbzOpMode {
 
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
-//        outtake1Motor = robot.outtake1Motor;
-//        outtake2motor = robot.outtake2Motor;
+        outtake1Motor = robot.outtake1Motor;
+        outtake2Motor = robot.outtake2Motor;
         //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
 //        holdServo = hardwareMap.get(Servo.class, "holdServo");
@@ -166,7 +171,7 @@ public class waterqualityOpMode extends DbzOpMode {
     public void opLoop() {
 
 
-
+        turret.setPower(0);
         drive();
         //detectionValuesMatcha();
         activeIntake();
@@ -271,7 +276,7 @@ public class waterqualityOpMode extends DbzOpMode {
             shooting = true;
         }
 
-        if (shooting && intaketimer.milliseconds() > 200) {
+        if (shooting && intaketimer.milliseconds() > 1000) {
             leftpushServo.setPosition(0.25);   // OPEN again (idle)
             rightpushServo.setPosition(0.21);
 
@@ -279,6 +284,22 @@ public class waterqualityOpMode extends DbzOpMode {
         }
 
         shootLast = shootPressed;
+
+        boolean leftBumperPressed = dbzGamepad1.left_bumper;
+
+        if (leftBumperPressed && !leftBumperLast) {
+            if (!Shooting) {
+                outtake1Motor.setPower(-power);
+                outtake2Motor.setPower(power);
+                Shooting = true;
+            } else {
+                outtake1Motor.setPower(0);
+                outtake2Motor.setPower(0);
+                Shooting = false;
+            }
+        }
+
+        leftBumperLast = leftBumperPressed;
     }
 
 

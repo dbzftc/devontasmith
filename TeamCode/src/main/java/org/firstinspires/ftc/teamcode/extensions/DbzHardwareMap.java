@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.extensions;
 
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -28,8 +29,8 @@ public class DbzHardwareMap {
     public Servo holdServo;
     public Servo shoot1Servo;
     public Servo shoot2Servo;
-    public Servo outtake1;
-    public Servo outtake2;
+    public DcMotorEx outtake1Motor;
+    public DcMotorEx outtake2Motor;
     public DcMotorEx turret;
     public Servo rightpushServo;
     public Servo leftpushServo;
@@ -43,8 +44,8 @@ public class DbzHardwareMap {
         //        hood("hoodMotor"),
         intake("intakeMotor"),
 
-        outtake1("outtake1Motor"),
-        outtake2("outtake2Motor"),
+        outtake1Motor("outtake1Motor"),
+        outtake2Motor("outtake2Motor"),
         turret("turret"),
         rightpushServo("rightpushServo"),
         leftpushServo("leftpushServo");
@@ -67,8 +68,8 @@ public class DbzHardwareMap {
         intakeMotor = hwMap.get(DcMotorEx.class, Motor.intake.getName());
         rightpushServo = hwMap.get(Servo.class, "rightpushServo");
         leftpushServo = hwMap.get(Servo.class, "leftpushServo");
-//        outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1.getName());
-//        outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2.getName());
+        outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1Motor.getName());
+        outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2Motor.getName());
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
 //        holdServo = hwMap.get(Servo.class, "holdServo");
 //        shoot1Servo = hwMap.get(Servo.class, "shoot1Servo");
