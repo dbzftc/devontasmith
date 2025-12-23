@@ -46,8 +46,6 @@ public class smittyOpMode extends DbzOpMode {
     protected Servo holdServo, shoot1Servo, shoot2Servo, pushServo;
 
 
-    private GoBILDA_Pinpoint pinpoint;
-
     private double flywheelPower = 0.90;
     private double flywheelPower2 = 0.65;
     private double flywheelPowerOff=0;

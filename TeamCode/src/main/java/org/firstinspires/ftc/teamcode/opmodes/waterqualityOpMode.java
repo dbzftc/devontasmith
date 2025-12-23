@@ -29,7 +29,10 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
-
+import org.firstinspires.ftc.teamcode.extensions.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.extensions.GoBildaPinpointDriver;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.List;
 
@@ -38,7 +41,7 @@ import java.util.List;
 public class waterqualityOpMode extends DbzOpMode {
     private final double powMult = 1.0;
     private double power = 0.8;
-
+    private GoBildaPinpointDriver pinpoint;
 
     protected DcMotorEx frontLeft, frontRight, backLeft, backRight;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
@@ -56,7 +59,6 @@ public class waterqualityOpMode extends DbzOpMode {
 //    public static double kD = 0.000012;
 //    public static double kF = 0.00043;  // feedforward coefficient (ticks/sec -> power)
 //    public static double targetVelocity = -2100; // ticks/sec
-
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     private VoltageSensor batteryVoltageSensor;
@@ -84,7 +86,6 @@ public class waterqualityOpMode extends DbzOpMode {
     private boolean shootLast = false;
     private boolean shooting = false;
     private boolean Shooting = false;
-
 
 
     double x;
@@ -125,6 +126,8 @@ public class waterqualityOpMode extends DbzOpMode {
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         outtake1Motor = robot.outtake1Motor;
         outtake2Motor = robot.outtake2Motor;
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+
         //flywheelMotor = robot.flywheelMotor;
         //limelight = robot.limelight;
 //        holdServo = hardwareMap.get(Servo.class, "holdServo");
@@ -177,7 +180,7 @@ public class waterqualityOpMode extends DbzOpMode {
         activeIntake();
         shoot();
         transfer();
-
+        pinpoint.update();
 
 //        double x = follower.getPose().getX();
 //        double y = follower.getPose().getY();
@@ -267,7 +270,6 @@ public class waterqualityOpMode extends DbzOpMode {
 
     private void shoot() {
         boolean shootPressed = dbzGamepad1.right_bumper;
-
         if (shootPressed && !shootLast && !shooting) {
             leftpushServo.setPosition(0.9);
             rightpushServo.setPosition(0.86);
@@ -301,7 +303,6 @@ public class waterqualityOpMode extends DbzOpMode {
 
         leftBumperLast = leftBumperPressed;
     }
-
 
 
 

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.extensions;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -34,6 +35,7 @@ public class DbzHardwareMap {
     public DcMotorEx turret;
     public Servo rightpushServo;
     public Servo leftpushServo;
+    public AnalogInput turretEncoder;
 
 
     public enum Motor {
@@ -43,7 +45,7 @@ public class DbzHardwareMap {
         frontleft("frontLeft"),
         //        hood("hoodMotor"),
         intake("intakeMotor"),
-
+        turretEncoder("turretEncoder"),
         outtake1Motor("outtake1Motor"),
         outtake2Motor("outtake2Motor"),
         turret("turret"),
@@ -61,6 +63,7 @@ public class DbzHardwareMap {
         backRight = hwMap.get(DcMotorEx.class, Motor.backright.getName());
         backLeft = hwMap.get(DcMotorEx.class, Motor.backleft.getName());
         frontLeft = hwMap.get(DcMotorEx.class, Motor.frontleft.getName());
+        turretEncoder = hwMap.get(AnalogInput.class, "turretEncoder");
 
         turret = hwMap.get(DcMotorEx.class, Motor.turret.getName());
 //
