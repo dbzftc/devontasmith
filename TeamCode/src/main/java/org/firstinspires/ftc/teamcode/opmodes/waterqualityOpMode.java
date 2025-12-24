@@ -86,6 +86,10 @@ public class waterqualityOpMode extends DbzOpMode {
     private boolean shootLast = false;
     private boolean shooting = false;
     private boolean Shooting = false;
+    private boolean turretLock = false;
+    private boolean turretLockLast = false;
+    private double turretLockAngle = 0;
+
 
 
     double x;
@@ -169,6 +173,28 @@ public class waterqualityOpMode extends DbzOpMode {
 
     }
 
+    private void turretLockControl() {
+        boolean lockPressed = dbzGamepad1.x; // choose button (X)
+
+        if (lockPressed && !turretLockLast) {
+            turretLock = !turretLock;
+            if (turretLock) {
+                turretLockAngle = turret.getCurrentPosition();
+            }
+        }
+        turretLockLast = lockPressed;
+
+        if (!turretLock) return;
+
+        double error = turretLockAngle - turret.getCurrentPosition();
+        double kP = 0.01; // simple holding P
+        double power = error * kP;
+
+        power = Math.max(-0.4, Math.min(0.4, power));
+        turret.setPower(power);
+    }
+
+
 
     @Override
     public void opLoop() {
@@ -177,6 +203,7 @@ public class waterqualityOpMode extends DbzOpMode {
         turret.setPower(0);
         drive();
         //detectionValuesMatcha();
+        turretLockControl();
         activeIntake();
         shoot();
         transfer();

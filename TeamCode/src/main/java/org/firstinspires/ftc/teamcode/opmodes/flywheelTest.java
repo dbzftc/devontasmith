@@ -34,8 +34,7 @@
 //    protected void opInit() {
 //        motor1 = hardwareMap.get(DcMotorEx.class, "outtake1Motor");
 //        motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
-//        shoot1Servo = hardwareMap.get(Servo.class, "shoot1Servo");
-//        shoot2Servo = hardwareMap.get(Servo.class, "shoot2Servo");
+//
 //
 //        motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 //        motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -64,9 +63,7 @@
 //
 //    @Override
 //    protected void opLoop() {
-//
-//
-//        robot.intakeMotor.setPower(-1);
+////        robot.intakeMotor.setPower(-1);
 //        controller.setPID(kP, kI, kD);
 //
 //        controller.setIntegrationBounds(-0.3,0.3);
@@ -81,23 +78,8 @@
 //        double power = pid + feedforward;
 //        power = Math.max(-1, Math.min(1, power));
 //
-//        motor1.setPower(power);
+//        motor1.setPower(-power);
 //        motor2.setPower(power);
-//        if(dbzGamepad1.right_trigger>0.1){
-//            robot.holdServo.setPosition(holdPos);
-//            robot.pushServo.setPosition(0.75);
-//
-//
-//
-//
-//        }
-//        else if(dbzGamepad1.left_trigger>0.1){
-//
-//            robot.holdServo.setPosition(holdPos2);
-//            robot.pushServo.setPosition(0.2);
-//
-//        }
-//
 //
 //
 //        telemetry.addData("Target Velocity", targetVelocity);
@@ -106,8 +88,7 @@
 //        telemetry.addData("Power", power);
 //        telemetry.addData("Battery Voltage", batteryVoltage);
 //        telemetry.update();
-//        shoot1Servo.setPosition(shootPos);
-//        shoot2Servo.setPosition(shootPos);
+//
 //    }
 //
 //    @Override
