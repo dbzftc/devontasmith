@@ -3,42 +3,25 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 //import static org.firstinspires.ftc.teamcode.opmodes.flywheelTest.kI;
 
-import com.pedropathing.control.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.arcrobotics.ftclib.controller.PIDController;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
-import org.firstinspires.ftc.teamcode.auton.Constants;
-import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 import org.firstinspires.ftc.teamcode.extensions.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.extensions.GoBildaPinpointDriver;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import java.util.List;
 
 
-@TeleOp(name = "waterqualityOpMode")
-public class waterqualityOpMode extends DbzOpMode {
+@TeleOp(name = "MainTeleOpMode")
+public class MainTeleOpMode extends DbzOpMode {
     private final double powMult = 1.0;
     private double power = 0.8;
     private GoBildaPinpointDriver pinpoint;
