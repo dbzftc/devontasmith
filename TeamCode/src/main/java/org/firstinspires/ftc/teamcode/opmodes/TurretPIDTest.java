@@ -4,6 +4,8 @@ import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
 import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.leftpushServo;
 import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.rightpushServo;
+import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.tonv;
+
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -37,8 +39,8 @@ public class TurretPIDTest extends DbzOpMode {
     private boolean rightTriggerLast = false;
     public static double targetX = 135;
     public static double targetY = 61;
-
-    protected Servo rightpushServo, leftpushServo;
+    public static double targetVelocity = -2300; // ticks/sec
+    protected Servo rightpushServo, leftpushServo, tonv;
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
@@ -51,7 +53,7 @@ public class TurretPIDTest extends DbzOpMode {
     public static double vkI = 0.0;
     public static double vkD = 0.001;
     public static double vkF = 2;
-    public static double targetVelocity = -2300; // ticks/sec
+    public static double tonvPos = 0.8;
 
     private boolean leftBumperLast = false;
 
@@ -78,6 +80,7 @@ public class TurretPIDTest extends DbzOpMode {
         motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
+        tonv = hardwareMap.get(Servo.class, "tonv");
         intakeMotor = robot.intakeMotor;
         motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -85,10 +88,6 @@ public class TurretPIDTest extends DbzOpMode {
         motor2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         outtake1Motor = robot.outtake1Motor;
         outtake2Motor = robot.outtake2Motor;
-        outtake1Motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        outtake1Motor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        outtake2Motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        outtake2Motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         // One motor reversed if your flywheels are mirrored
@@ -127,7 +126,7 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opLoop() {
-
+        tonv.setPosition(tonvPos);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
@@ -144,31 +143,69 @@ public class TurretPIDTest extends DbzOpMode {
             draw();
         }
 
+
         telemetryM.update(telemetry);
 //        robot.intakeMotor.setPower(-1);
-        controller.setPID(vkP, vkI, vkD);
+//        controller.setPID(vkP, vkI, vkD);
+//
+//        controller.setIntegrationBounds(-0.3,0.3);
+//        double VcurrentVelocity = motor2.getVelocity();
+//        double pid = controller.calculate(VcurrentVelocity, targetVelocity);
+//
+//        // Battery compensation for feedforward
+//        double batteryVoltage = batteryVoltageSensor.getVoltage();
+//        double feedforward = (vkF * targetVelocity) * (12.0 / batteryVoltage);
+//
+//        double power = pid + feedforward;
+//        power = Math.max(-1, Math.min(1, power));
+//
+//        motor1.setPower(power);
+//        motor2.setPower(power);
 
-        controller.setIntegrationBounds(-0.3,0.3);
         double currentVelocity = motor2.getVelocity();
-        double pid = controller.calculate(currentVelocity, targetVelocity);
 
-        // Battery compensation for feedforward
-        double batteryVoltage = batteryVoltageSensor.getVoltage();
-        double voltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
-        double feedforward = (vkF * targetVelocity) * (12.0 / batteryVoltage);
+// Max motor velocity in ticks/sec
+        double maxVelocity = motor2.getMotorType().getMaxRPM() *
+                motor2.getMotorType().getTicksPerRev() / 60.0;
 
-        double power = pid + feedforward;
-        power = Math.max(-1, Math.min(1, power));
+// --- Normalized PID ---
+// Error scaled to fraction of max velocity
+        double velocityError = (targetVelocity - currentVelocity) / maxVelocity;
+        double pidOutput = vkP * velocityError;
 
-        outtake1Motor.setPower(-power);
+// --- Normalized Feedforward ---
+// Fraction of max velocity, scaled by kF
+        double ff = vkF * (targetVelocity / maxVelocity);
+
+// Optional: voltage compensation
+        double batteryVoltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
+        ff *= 12.0 / batteryVoltage;
+
+// --- Combine PID + FF ---
+        double power = pidOutput + ff;
+
+// Clamp motor power to [-1, 1]
+        power = Math.max(-1.0, Math.min(1.0, power));
+
+// --- Set motor powers ---
+        outtake1Motor.setPower(power);  // reverse if necessary
         outtake2Motor.setPower(power);
 
 
 
+//        telemetry.addData("Target Velocity", targetVelocity);
+//        telemetry.addData("Current Velocity", VcurrentVelocity);
+//        telemetry.addData("Error", targetVelocity - VcurrentVelocity);
+//        telemetry.addData("Power", power);
+//        telemetry.addData("Battery Voltage", batteryVoltage);
+//        telemetry.update();
+
         telemetry.addData("Target Velocity", targetVelocity);
         telemetry.addData("Current Velocity", currentVelocity);
-        telemetry.addData("Error", targetVelocity - currentVelocity);
-        telemetry.addData("Power", power);
+        telemetry.addData("Error (ticks/sec)", targetVelocity - currentVelocity);
+        telemetry.addData("PID Output", pidOutput);
+        telemetry.addData("Feedforward", ff);
+        telemetry.addData("Motor Power", power);
         telemetry.addData("Battery Voltage", batteryVoltage);
         telemetry.update();
     }
@@ -191,9 +228,9 @@ public class TurretPIDTest extends DbzOpMode {
         }
 
         shootLast = shootPressed;
-//
-//        boolean leftBumperPressed = dbzGamepad1.left_bumper;
-//
+
+        boolean leftBumperPressed = dbzGamepad1.left_bumper;
+
 //        if (leftBumperPressed && !leftBumperLast) {
 //            if (!Shooting) {
 //                outtake1Motor.setPower(-power);

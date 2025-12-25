@@ -30,6 +30,7 @@ public class DbzHardwareMap {
     public Servo holdServo;
     public Servo shoot1Servo;
     public Servo shoot2Servo;
+    public Servo tonv;
     public DcMotorEx outtake1Motor;
     public DcMotorEx outtake2Motor;
     public DcMotorEx turret;
@@ -50,7 +51,9 @@ public class DbzHardwareMap {
         outtake2Motor("outtake2Motor"),
         turret("turret"),
         rightpushServo("rightpushServo"),
-        leftpushServo("leftpushServo");
+        leftpushServo("leftpushServo"),
+        tonv("tonv");
+
 //        flywheel("flywheelMotor");
 
         private final String name;
@@ -71,6 +74,7 @@ public class DbzHardwareMap {
         intakeMotor = hwMap.get(DcMotorEx.class, Motor.intake.getName());
         rightpushServo = hwMap.get(Servo.class, "rightpushServo");
         leftpushServo = hwMap.get(Servo.class, "leftpushServo");
+        tonv = hwMap.get(Servo.class, "tonv");
         outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1Motor.getName());
         outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2Motor.getName());
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
