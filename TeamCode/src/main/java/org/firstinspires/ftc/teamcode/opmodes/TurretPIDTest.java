@@ -4,7 +4,7 @@ import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
 import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.leftpushServo;
 import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.rightpushServo;
-import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.tonv;
+import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.hoodServo;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -40,7 +40,7 @@ public class TurretPIDTest extends DbzOpMode {
     public static double targetX = 135;
     public static double targetY = 61;
     public static double targetVelocity = -2300; // ticks/sec
-    protected Servo rightpushServo, leftpushServo, tonv;
+    protected Servo rightpushServo, leftpushServo, hoodServo;
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
@@ -53,7 +53,7 @@ public class TurretPIDTest extends DbzOpMode {
     public static double vkI = 0.0;
     public static double vkD = 0.001;
     public static double vkF = 2;
-    public static double tonvPos = 0.8;
+    public static double hoodServoPos = 0.8;
 
     private boolean leftBumperLast = false;
 
@@ -80,7 +80,7 @@ public class TurretPIDTest extends DbzOpMode {
         motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
-        tonv = hardwareMap.get(Servo.class, "tonv");
+        hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         intakeMotor = robot.intakeMotor;
         motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -126,7 +126,7 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opLoop() {
-        tonv.setPosition(tonvPos);
+        hoodServo.setPosition(hoodServoPos);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
