@@ -33,6 +33,31 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 @Config
 @TeleOp(name = "TurretPIDTest")
 public class TurretPIDTest extends DbzOpMode {
+    //0.95
+    //(0.95)
+    //
+    //intakePos
+    //-1
+    //(-1)
+    //
+    //kD
+    //0.0000001
+    //(1e-7)
+    //
+    //kF
+    //0.
+    //(0)
+    //
+    //kI
+    //0
+    //(0)
+    //
+    //kP
+    //0.025
+    //(0.025)
+    //
+    //targetVelocity
+    //-1900
     private double power = 0.8;
     private ElapsedTime intaketimer = new ElapsedTime();
     private boolean leftTriggerLast = false;
@@ -45,10 +70,10 @@ public class TurretPIDTest extends DbzOpMode {
     private DcMotorEx motor1, motor2;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
-    public static double kP = 0.03;
+    public static double kP = 2.742;
     public static double kI = 0.0;
-    public static double kD = 0.001;
-    public static double kF = 2;
+    public static double kD = 0.0011;
+    public static double kF = 1.27;
     public static double vkP = 0.03;
     public static double vkI = 0.0;
     public static double vkD = 0.001;
@@ -62,7 +87,7 @@ public class TurretPIDTest extends DbzOpMode {
     private boolean Shooting = false;
 
     public static double turretZeroDeg = 336.0;
-
+    public static double intakePos = 0;
     private AnalogInput turretEncoder;
 
     private boolean aimingActive = false;
@@ -126,6 +151,8 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opLoop() {
+
+        intakeMotor.setPower(intakePos);
         hoodServo.setPosition(hoodServoPos);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
@@ -135,7 +162,7 @@ public class TurretPIDTest extends DbzOpMode {
         );
         shoot();
 
-        activeIntake();
+//        activeIntake();
         follower.update();
         aim();
 
@@ -246,38 +273,38 @@ public class TurretPIDTest extends DbzOpMode {
 //        leftBumperLast = leftBumperPressed;
     }
 
-    private void activeIntake() {
-
-        boolean leftTriggerHeld  = dbzGamepad1.left_trigger > 0.1;
-        boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
-
-        if (rightTriggerHeld) {
-            intakeMotor.setPower(1);
-            leftpushServo.setPosition(0.25);
-            rightpushServo.setPosition(0.21);
-        }
-
-        if (leftTriggerHeld) {
-            intakeMotor.setPower(-1);
-            leftpushServo.setPosition(0.25);
-            rightpushServo.setPosition(0.21);
-        }
-
-        if (!leftTriggerHeld && leftTriggerLast) {
-            intakeMotor.setPower(0);
-            leftpushServo.setPosition(0.30);
-            rightpushServo.setPosition(0.26);
-        }
-
-        if (!rightTriggerHeld && rightTriggerLast) {
-            intakeMotor.setPower(0);
-            leftpushServo.setPosition(0.30);
-            rightpushServo.setPosition(0.26);
-        }
-
-        leftTriggerLast  = leftTriggerHeld;
-        rightTriggerLast = rightTriggerHeld;
-    }
+//    private void activeIntake() {
+//
+//        boolean leftTriggerHeld  = dbzGamepad1.left_trigger > 0.1;
+//        boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
+//
+//        if (rightTriggerHeld) {
+//            intakeMotor.setPower(1);
+//            leftpushServo.setPosition(0.25);
+//            rightpushServo.setPosition(0.21);
+//        }
+//
+//        if (leftTriggerHeld) {
+//            intakeMotor.setPower(-1);
+//            leftpushServo.setPosition(0.25);
+//            rightpushServo.setPosition(0.21);
+//        }
+//
+//        if (!leftTriggerHeld && leftTriggerLast) {
+//            intakeMotor.setPower(0);
+//            leftpushServo.setPosition(0.30);
+//            rightpushServo.setPosition(0.26);
+//        }
+//
+//        if (!rightTriggerHeld && rightTriggerLast) {
+//            intakeMotor.setPower(0);
+//            leftpushServo.setPosition(0.30);
+//            rightpushServo.setPosition(0.26);
+//        }
+//
+//        leftTriggerLast  = leftTriggerHeld;
+//        rightTriggerLast = rightTriggerHeld;
+//    }
 
 
     private void aim() {
