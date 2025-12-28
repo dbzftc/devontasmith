@@ -2,9 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
-import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.leftpushServo;
-import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.rightpushServo;
-import static org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap.Motor.hoodServo;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -33,58 +30,35 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 @Config
 @TeleOp(name = "TurretPIDTest")
 public class TurretPIDTest extends DbzOpMode {
-    //0.95
-    //(0.95)
-    //
-    //intakePos
-    //-1
-    //(-1)
-    //
-    //kD
-    //0.0000001
-    //(1e-7)
-    //
-    //kF
-    //0.
-    //(0)
-    //
-    //kI
-    //0
-    //(0)
-    //
-    //kP
-    //0.025
-    //(0.025)
-    //
-    //targetVelocity
-    //-1900
+
     private double power = 0.8;
     private ElapsedTime intaketimer = new ElapsedTime();
     private boolean leftTriggerLast = false;
     private boolean rightTriggerLast = false;
-    public static double targetX = 135;
-    public static double targetY = 61;
-    public static double targetVelocity = -2300; // ticks/sec
+    public static double targetX = 110;
+    public static double targetY = -5;
+    public static double targetVelocity = -670; // ticks/sec
     protected Servo rightpushServo, leftpushServo, hoodServo;
     private PIDController controller;
     private DcMotorEx motor1, motor2;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
-    public static double kP = 2.742;
+    public static double kP = 0.025;
     public static double kI = 0.0;
-    public static double kD = 0.0011;
-    public static double kF = 1.27;
-    public static double vkP = 0.03;
+    public static double kD = 0.0000001;
+    public static double kF = 0.5;
+    public static double vkP = 2.742;
     public static double vkI = 0.0;
-    public static double vkD = 0.001;
-    public static double vkF = 2;
+    public static double vkD = 0.0011;
+    public static double vkF = 1.27;
     public static double hoodServoPos = 0.8;
 
     private boolean leftBumperLast = false;
 
     private boolean shootLast = false;
     private boolean shooting = false;
-    private boolean Shooting = false;
+    private boolean autoHoodActive = false;
+    private boolean lastXButton = false;
 
     public static double turretZeroDeg = 336.0;
     public static double intakePos = 0;
@@ -101,11 +75,13 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opInit() {
+
         motor1 = hardwareMap.get(DcMotorEx.class, "outtake1Motor");
         motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
+        hoodServo.setPosition(0.8);
         intakeMotor = robot.intakeMotor;
         motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -151,9 +127,42 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opLoop() {
+        boolean xButton = gamepad1.x;
+        if (xButton && !lastXButton) {
+            autoHoodActive = !autoHoodActive;
+        }
+        lastXButton = xButton;
+        Pose ppose = follower.getPose();
+
+        if (autoHoodActive) {
+            if (ppose != null) {
+                double dx = targetX - ppose.getX();
+                double dy = targetY - ppose.getY();
+                double distance = Math.sqrt(dx*dx + dy*dy);
+
+                // Set hood and target velocity based on distance
+                hoodServo.setPosition(
+                        0.000023671 * Math.pow(distance, 3)
+                                - 0.00453499 * Math.pow(distance, 2)
+                                + 0.284088 * distance
+                                - 4.98908
+                );
+                targetVelocity = (0.017872 * distance * distance - 7.71718 * distance - 974.83224);
+
+                telemetry.addData("Distance to target", distance);
+            } else {
+                telemetry.addData("Distance to target", "Pose is null");
+                hoodServo.setPosition(0.8);
+                targetVelocity = 0;
+            }
+        } else {
+            hoodServo.setPosition(0.8);
+            targetVelocity = -1400;
+        }
+
 
         intakeMotor.setPower(intakePos);
-        hoodServo.setPosition(hoodServoPos);
+//        hoodServo.setPosition(hoodServoPos);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
@@ -162,7 +171,7 @@ public class TurretPIDTest extends DbzOpMode {
         );
         shoot();
 
-//        activeIntake();
+        activeIntake();
         follower.update();
         aim();
 
@@ -188,44 +197,28 @@ public class TurretPIDTest extends DbzOpMode {
 //
 //        motor1.setPower(power);
 //        motor2.setPower(power);
-
         double currentVelocity = motor2.getVelocity();
 
-// Max motor velocity in ticks/sec
+
         double maxVelocity = motor2.getMotorType().getMaxRPM() *
                 motor2.getMotorType().getTicksPerRev() / 60.0;
 
-// --- Normalized PID ---
-// Error scaled to fraction of max velocity
         double velocityError = (targetVelocity - currentVelocity) / maxVelocity;
         double pidOutput = vkP * velocityError;
 
-// --- Normalized Feedforward ---
-// Fraction of max velocity, scaled by kF
         double ff = vkF * (targetVelocity / maxVelocity);
-
-// Optional: voltage compensation
         double batteryVoltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
         ff *= 12.0 / batteryVoltage;
-
-// --- Combine PID + FF ---
         double power = pidOutput + ff;
 
-// Clamp motor power to [-1, 1]
         power = Math.max(-1.0, Math.min(1.0, power));
 
-// --- Set motor powers ---
         outtake1Motor.setPower(power);  // reverse if necessary
         outtake2Motor.setPower(power);
 
 
 
-//        telemetry.addData("Target Velocity", targetVelocity);
-//        telemetry.addData("Current Velocity", VcurrentVelocity);
-//        telemetry.addData("Error", targetVelocity - VcurrentVelocity);
-//        telemetry.addData("Power", power);
-//        telemetry.addData("Battery Voltage", batteryVoltage);
-//        telemetry.update();
+
 
         telemetry.addData("Target Velocity", targetVelocity);
         telemetry.addData("Current Velocity", currentVelocity);
@@ -273,41 +266,42 @@ public class TurretPIDTest extends DbzOpMode {
 //        leftBumperLast = leftBumperPressed;
     }
 
-//    private void activeIntake() {
-//
-//        boolean leftTriggerHeld  = dbzGamepad1.left_trigger > 0.1;
-//        boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
-//
-//        if (rightTriggerHeld) {
-//            intakeMotor.setPower(1);
-//            leftpushServo.setPosition(0.25);
-//            rightpushServo.setPosition(0.21);
-//        }
-//
-//        if (leftTriggerHeld) {
-//            intakeMotor.setPower(-1);
-//            leftpushServo.setPosition(0.25);
-//            rightpushServo.setPosition(0.21);
-//        }
-//
-//        if (!leftTriggerHeld && leftTriggerLast) {
-//            intakeMotor.setPower(0);
-//            leftpushServo.setPosition(0.30);
-//            rightpushServo.setPosition(0.26);
-//        }
-//
-//        if (!rightTriggerHeld && rightTriggerLast) {
-//            intakeMotor.setPower(0);
-//            leftpushServo.setPosition(0.30);
-//            rightpushServo.setPosition(0.26);
-//        }
-//
-//        leftTriggerLast  = leftTriggerHeld;
-//        rightTriggerLast = rightTriggerHeld;
-//    }
+    private void activeIntake() {
+
+        boolean leftTriggerHeld  = dbzGamepad1.left_trigger > 0.1;
+        boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
+
+        if (rightTriggerHeld) {
+            intakeMotor.setPower(1);
+            leftpushServo.setPosition(0.25);
+            rightpushServo.setPosition(0.21);
+        }
+
+        if (leftTriggerHeld) {
+            intakeMotor.setPower(-1);
+            leftpushServo.setPosition(0.25);
+            rightpushServo.setPosition(0.21);
+        }
+
+        if (!leftTriggerHeld && leftTriggerLast) {
+            intakeMotor.setPower(0);
+            leftpushServo.setPosition(0.30);
+            rightpushServo.setPosition(0.26);
+        }
+
+        if (!rightTriggerHeld && rightTriggerLast) {
+            intakeMotor.setPower(0);
+            leftpushServo.setPosition(0.30);
+            rightpushServo.setPosition(0.26);
+        }
+
+        leftTriggerLast  = leftTriggerHeld;
+        rightTriggerLast = rightTriggerHeld;
+    }
 
 
     private void aim() {
+        double targetAngle;
 
         boolean leftBumper = gamepad1.left_bumper;
         if (leftBumper && !lastLeftBumper) {
@@ -316,16 +310,20 @@ public class TurretPIDTest extends DbzOpMode {
         }
         lastLeftBumper = leftBumper;
 
-        if (!aimingActive) {
-            turret.setPower(0);
-            return;
+
+
+        if (aimingActive) {
+            // Auto-aim at preset target
+            targetAngle = getDesiredTurretAngleDeg();
+        } else {
+            // Default forward heading (3.08V)
+            targetAngle = 0.0; // 0° = forward
         }
 
         controller.setPID(kP, kI, kD);
         controller.setIntegrationBounds(-0.25, 0.25);
 
         double currentAngle = getTurretAngleDeg();
-        double targetAngle = getDesiredTurretAngleDeg();
 
         double error = angleWrap(targetAngle - currentAngle);
         double pidOutput = controller.calculate(0, error);
