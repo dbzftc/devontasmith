@@ -35,7 +35,7 @@ public class TurretPIDTest extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
     private boolean leftTriggerLast = false;
     private boolean rightTriggerLast = false;
-    public static double targetX = 17.5;
+    public static double targetX = 18;
     public static double targetY = 0;
 
     public static double targetVelocity = -200; // ticks/sec
