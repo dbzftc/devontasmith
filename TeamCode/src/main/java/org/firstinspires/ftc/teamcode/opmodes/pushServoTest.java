@@ -28,15 +28,21 @@ public class pushServoTest extends OpMode {
     public static double holdPosL = 0.5;
     public static double holdPosR = 0.5;
 
-    private Servo rightpushServo, leftpushServo;
+    public static double holdservp = 0.5;
+
+
+
+    private Servo rightpushServo, leftpushServo, holdServo;
 
     public static String servoLeftName = "leftpushServo";
     public static String servoRightName = "rightpushServo";
+
 
     @Override
     public void init() {
         leftpushServo = hardwareMap.get(Servo.class, servoLeftName);
         rightpushServo = hardwareMap.get(Servo.class, servoRightName);
+        holdServo = hardwareMap.get(Servo.class, "holdServo");
 
     }
 
@@ -45,6 +51,7 @@ public class pushServoTest extends OpMode {
     public void loop() {
         leftpushServo.setPosition(holdPosL);
         rightpushServo.setPosition(holdPosR);
+        holdServo.setPosition(holdservp);
     }
 
 }

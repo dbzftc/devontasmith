@@ -1,459 +1,453 @@
 package org.firstinspires.ftc.teamcode.auton;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.auton.Constants;
+import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 @Config
 @Autonomous(name = "namitparikh", group = "Autonomous")
 public class namitparikh extends DbzOpMode {
 
-    private Follower driveFollower;
-    private Paths autoPaths;
+    public static double startX = 12.1;
+    public static double startY = 110.4;
+    public static double startHeadingDeg = 134;
 
-    private final ElapsedTime stateTimer = new ElapsedTime();
-    private final ElapsedTime shotTimer = new ElapsedTime();
+    public static double targetX = -4.6;
+    public static double targetY = 121.145;
 
-    private int autoState = 0;
+    public static double holdOpenPos = 0.2;
+    public static double holdClosePos = 0.06;
 
-    private DcMotorEx intakeMotor;
-    private DcMotorEx leftFlywheelMotor;
-    private DcMotorEx rightFlywheelMotor;
+    public static double leftPushShoot = 0.66;
+    public static double rightPushShoot = 0.69;
 
-    private Servo leftPusherServo;
-    private Servo rightPusherServo;
-    private Servo hoodServo;
+    public static double leftPushIdle = 0.06;
+    public static double rightPushIdle = 0.09;
 
+    public static double targetVelocity = -1400;
+    public static double vkP = 4.8;
+    public static double vkF = 1.07;
+
+    public static double turretZeroDeg = 360;
+    public static double turretKp = 0.014;
+    public static double turretKi = 0.0;
+    public static double turretKd = 0.001;
+    public static double turretMaxPower = 0.30;
+    public static double threshold = 175;
+
+    public static double turretPivotForwardIn = 0.0;
+    public static double turretPivotLeftIn = 0.0;
+
+    public static double hoodServoPos = 0.33;
+
+    private Servo rightpushServo, leftpushServo, holdServo, hoodServo;
+    private DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
+    private AnalogInput turretEncoder;
     private VoltageSensor batteryVoltageSensor;
 
-    // Servo positions
-    public static double leftPusherShootPos = 0.90;
-    public static double rightPusherShootPos = 0.86;
-    public static double leftPusherIdlePos = 0.25;
-    public static double rightPusherIdlePos = 0.21;
-    public static double hoodIdlePos = 0.80;
+    private PIDController turretPID;
 
-    // Flywheel control
-    public static double flywheelTargetVelocity = -1400;
-    public static double flywheelKp = 2.742;
-    public static double flywheelKf = 1.27;
+    private Follower follower;
+    private Paths paths;
 
-    private boolean isShooting = false;
+    private final ElapsedTime waitTimer = new ElapsedTime();
+    private boolean shooting = false;
+    private double waitms = 0;
 
-    // Bucket position (example — adjust to actual field coordinates)
-    private static double bucketX = 0.0;
-    private static double bucketY = 0.0;
+    private static final double wait5s = 1000;
+    private static final double wait1s = 1000;
 
-    @Override
-    protected void opInit() {
-        intakeMotor = robot.intakeMotor;
-        leftFlywheelMotor = robot.outtake1Motor;
-        rightFlywheelMotor = robot.outtake2Motor;
+    private int state = 0;
 
-        leftPusherServo = hardwareMap.get(Servo.class, "leftpushServo");
-        rightPusherServo = hardwareMap.get(Servo.class, "rightpushServo");
-        hoodServo = hardwareMap.get(Servo.class, "hoodServo");
+    public static class Paths {
+        public PathChain Path1;
+        public PathChain Path2;
+        public PathChain Path3;
+        public PathChain Path4;
+        public PathChain Path5;
+        public PathChain Path7;
 
-        rightFlywheelMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        leftFlywheelMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        public PathChain Path52;
+        public PathChain Path72;
 
-        hoodServo.setPosition(hoodIdlePos);
-        leftPusherServo.setPosition(leftPusherIdlePos);
-        rightPusherServo.setPosition(rightPusherIdlePos);
+        public PathChain Path9;
+        public PathChain Path10;
+        public PathChain Path11;
+        public PathChain Path13;
+        public PathChain Path14;
+        public PathChain Path15;
+        public PathChain Path16;
 
-        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+        public Paths(Follower f) {
+            Path1 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(12.1, 110.4), new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(134), Math.toRadians(180))
+                    .build();
 
-        driveFollower = Constants.createFollower(hardwareMap);
-        driveFollower.setStartingPose(new Pose(21.084, 123.813, Math.toRadians(142)));
+            Path2 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(48.7, 73.6), new Pose(37.3, 49)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-        autoPaths = new Paths(driveFollower);
+            Path3 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(37.3, 49), new Pose(9.6, 48.1)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-        autoState = 0;
-        stateTimer.reset();
-    }
+            Path4 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(9.6, 48.1), new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-    @Override
-    protected void opLoopHook() {
+            Path5 = f.pathBuilder().addPath(new BezierCurve(
+                            new Pose(48.7, 73.6),
+                            new Pose(44.480935875216645, 50.774696707105726),
+                            new Pose(2.3, 48.4)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(170))
+                    .build();
 
-    }
+            Path7 = f.pathBuilder().addPath(new BezierCurve(
+                            new Pose(2.3, 48.4),
+                            new Pose(44.480935875216645, 50.774696707105726),
+                            new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(151), Math.toRadians(180))
+                    .build();
 
-    @Override
-    protected void opLoop() {
-        // Update follower and flywheel
-        driveFollower.update();
-        runFlywheelVelocityControl();
-        updateShotSequence();
+            Path52 = f.pathBuilder().addPath(new BezierCurve(
+                            new Pose(48.7, 73.6),
+                            new Pose(44.480935875216645, 50.774696707105726),
+                            new Pose(2.3, 48.9)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(170))
+                    .build();
 
-        switch (autoState) {
-            case 0:
-                intakeMotor.setPower(1);
-                if (startPath(autoPaths.toBallsFromBin)) autoState = 1;
-                break;
+            Path72 = f.pathBuilder().addPath(new BezierCurve(
+                            new Pose(2.3, 48.9),
+                            new Pose(44.480935875216645, 50.774696707105726),
+                            new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(151), Math.toRadians(180))
+                    .build();
 
-            case 1:
-                intakeMotor.setPower(1);
-                if (startPath(autoPaths.ballsToLeverAndBack)) autoState = 2;
-                break;
+            Path9 = f.pathBuilder().addPath(new BezierCurve(
+                            new Pose(48.7, 73.6),
+                            new Pose(37.95, 24.5)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-            case 2:
-                intakeMotor.setPower(1);
-                if (startPath(autoPaths.sweepBallsMidLane)) autoState = 3;
-                break;
+            Path10 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(37.95, 24.5), new Pose(9.9, 25.64)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-            case 3:
-                intakeMotor.setPower(1);
-                if (startPath(autoPaths.returnToBinFromBalls)) autoState = 4;
-                break;
+            Path11 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(9.9, 25.64), new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-            case 4:
-                intakeMotor.setPower(0);
+            Path13 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(48.7, 73.6), new Pose(37.97, 72.86)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-                // Face bucket before shooting
-                faceBucket();
+            Path14 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(37.97, 72.86), new Pose(9.8, 72.86)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-                if (!isShooting) startShotOneSecond();
+            Path15 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(9.8, 72.86), new Pose(48.7, 73.6)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
 
-                if (!isShooting && stateTimer.seconds() > 0.5) {
-                    driveFollower.followPath(autoPaths.binToBallsLowLane, true);
-                    stateTimer.reset();
-                    autoState = 5;
-                }
-                break;
-
-            case 5:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.ballsLowLaneBackToBin, true);
-                    stateTimer.reset();
-                    autoState = 6;
-                }
-                break;
-
-            case 6:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    stateTimer.reset();
-                    autoState = 7;
-                }
-                break;
-
-            case 7:
-                intakeMotor.setPower(0);
-                faceBucket();
-                if (!isShooting) startShotOneSecond();
-                if (!isShooting && stateTimer.seconds() > 0.5) {
-                    driveFollower.followPath(autoPaths.binToBallsLowLaneAgain, true);
-                    stateTimer.reset();
-                    autoState = 8;
-                }
-                break;
-
-            case 8:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.ballsLowLaneAgainBackToBin, true);
-                    stateTimer.reset();
-                    autoState = 9;
-                }
-                break;
-
-            case 9:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    stateTimer.reset();
-                    autoState = 10;
-                }
-                break;
-
-            case 10:
-                intakeMotor.setPower(0);
-                faceBucket();
-                if (!isShooting) startShotOneSecond();
-                if (!isShooting && stateTimer.seconds() > 0.5) {
-                    driveFollower.followPath(autoPaths.binToBallsUpperLaneCurve, true);
-                    stateTimer.reset();
-                    autoState = 11;
-                }
-                break;
-
-            case 11:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.sweepBallsUpperLane, true);
-                    stateTimer.reset();
-                    autoState = 12;
-                }
-                break;
-
-            case 12:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.returnToBinFromUpperLane, true);
-                    stateTimer.reset();
-                    autoState = 13;
-                }
-                break;
-
-            case 13:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    stateTimer.reset();
-                    autoState = 14;
-                }
-                break;
-
-            case 14:
-                intakeMotor.setPower(0);
-                faceBucket();
-                if (!isShooting) startShotOneSecond();
-                if (!isShooting && stateTimer.seconds() > 0.5) {
-                    driveFollower.followPath(autoPaths.binToBallsLowerLaneCurve, true);
-                    stateTimer.reset();
-                    autoState = 15;
-                }
-                break;
-
-            case 15:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.sweepBallsLowerLane, true);
-                    stateTimer.reset();
-                    autoState = 16;
-                }
-                break;
-
-            case 16:
-                intakeMotor.setPower(1);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.2) {
-                    driveFollower.followPath(autoPaths.returnToBinFromLowerLane, true);
-                    stateTimer.reset();
-                    autoState = 17;
-                }
-                break;
-
-            case 17:
-                intakeMotor.setPower(0);
-                faceBucket();
-                if (!isShooting) startShotOneSecond();
-                if (!isShooting && stateTimer.seconds() > 0.5) {
-                    driveFollower.followPath(autoPaths.parkLeftFromBin, true);
-                    stateTimer.reset();
-                    autoState = 18;
-                }
-                break;
-
-            case 18:
-                intakeMotor.setPower(0);
-                if (!driveFollower.isBusy() && stateTimer.seconds() > 0.5) {
-                    leftFlywheelMotor.setPower(0);
-                    rightFlywheelMotor.setPower(0);
-                    autoState = -1;
-                }
-                break;
+            Path16 = f.pathBuilder().addPath(new BezierLine(
+                            new Pose(48.7, 73.6), new Pose(30, 80)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .build();
         }
     }
 
     @Override
-    protected void opTeardown() { }
+    public void opInit() {
+        rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
+        leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
+        holdServo = hardwareMap.get(Servo.class, "holdServo");
+        hoodServo = hardwareMap.get(Servo.class, "hoodServo");
 
-    private boolean startPath(PathChain path) {
-        if (!driveFollower.isBusy() && stateTimer.seconds() > 0.5) {
-            driveFollower.followPath(path, true);
-            stateTimer.reset();
+        intakeMotor = robot.intakeMotor;
+        outtake1Motor = robot.outtake1Motor;
+        outtake2Motor = robot.outtake2Motor;
+
+        turret = hardwareMap.get(DcMotorEx.class, DbzHardwareMap.Motor.turret.getName());
+        turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        turret.setDirection(DcMotorEx.Direction.FORWARD);
+
+        turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+
+        turretPID = new PIDController(turretKp, turretKi, turretKd);
+
+        outtake1Motor.setDirection(DcMotorEx.Direction.REVERSE);
+        outtake2Motor.setDirection(DcMotorEx.Direction.FORWARD);
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
+        paths = new Paths(follower);
+
+        holdServo.setPosition(holdClosePos);
+        leftpushServo.setPosition(leftPushIdle);
+        rightpushServo.setPosition(rightPushIdle);
+        hoodServo.setPosition(hoodServoPos);
+    }
+
+    @Override
+    public void opLoop() {
+        intakeMotor.setPower(-1);
+
+        follower.update();
+
+        updateHoodAndVelocity();
+
+        runFlywheelVelocityControl();
+        runTurretAlwaysOn();
+
+        holdServo.setPosition(shooting ? holdOpenPos : holdClosePos);
+        leftpushServo.setPosition(shooting ? leftPushShoot : leftPushIdle);
+        rightpushServo.setPosition(shooting ? rightPushShoot : rightPushIdle);
+
+        switch (state) {
+            case 0:
+                follower.followPath(paths.Path1);
+                state = 1;
+                break;
+
+            case 1:
+                if (!follower.isBusy()) beginWait(wait5s, true, 2);
+                break;
+
+            case 2:
+                if (waitDone()) { follower.followPath(paths.Path2); state = 3; }
+                break;
+
+            case 3:
+                if (!follower.isBusy()) { follower.followPath(paths.Path3); state = 4; }
+                break;
+
+            case 4:
+                if (!follower.isBusy()) { follower.followPath(paths.Path4); state = 5; }
+                break;
+
+            case 5:
+                if (!follower.isBusy()) beginWait(wait5s, true, 6);
+                break;
+
+            case 6:
+                if (waitDone()) { follower.followPath(paths.Path5); state = 7; }
+                break;
+
+            case 7:
+                if (!follower.isBusy()) beginWait(wait1s, false, 8);
+                break;
+
+            case 8:
+                if (waitDone()) { follower.followPath(paths.Path7); state = 9; }
+                break;
+
+            case 9:
+                if (!follower.isBusy()) beginWait(wait5s, true, 10);
+                break;
+
+            case 10:
+                if (waitDone()) { follower.followPath(paths.Path52); state = 11; }
+                break;
+
+            case 11:
+                if (!follower.isBusy()) beginWait(wait1s, false, 12);
+                break;
+
+            case 12:
+                if (waitDone()) { follower.followPath(paths.Path72); state = 13; }
+                break;
+
+            case 13:
+                if (!follower.isBusy()) beginWait(wait5s, true, 14);
+                break;
+
+            case 14:
+                if (waitDone()) { follower.followPath(paths.Path9); state = 15; }
+                break;
+
+            case 15:
+                if (!follower.isBusy()) { follower.followPath(paths.Path10); state = 16; }
+                break;
+
+            case 16:
+                if (!follower.isBusy()) { follower.followPath(paths.Path11); state = 17; }
+                break;
+
+            case 17:
+                if (!follower.isBusy()) beginWait(wait5s, true, 18);
+                break;
+
+            case 18:
+                if (waitDone()) { follower.followPath(paths.Path13); state = 19; }
+                break;
+
+            case 19:
+                if (!follower.isBusy()) { follower.followPath(paths.Path14); state = 20; }
+                break;
+
+            case 20:
+                if (!follower.isBusy()) { follower.followPath(paths.Path15); state = 21; }
+                break;
+
+            case 21:
+                if (!follower.isBusy()) beginWait(wait5s, true, 22);
+                break;
+
+            case 22:
+                if (waitDone()) follower.followPath(paths.Path16);
+                break;
+        }
+    }
+
+    private void updateHoodAndVelocity() {
+        boolean active =
+                state == 0 || state == 1 || state == 2 ||
+                        state == 4 || state == 5 || state == 6 ||
+                        state == 7 || state == 8 ||
+                        state == 9 || state == 10 || state == 11 ||
+                        state == 12 || state == 13 || state == 14 ||
+                        state == 16 || state == 17 || state == 18 ||
+                        state == 21;
+
+        if (!active) {
+            targetVelocity = -500;
+            hoodServo.setPosition(hoodServoPos);
+            return;
+        }
+
+        Pose pose = follower.getPose();
+        if (pose == null) {
+            targetVelocity = -500;
+            hoodServo.setPosition(hoodServoPos);
+            return;
+        }
+
+        double dx = targetX - pose.getX();
+        double dy = targetY - pose.getY();
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance >= 110) {
+            double originalPos = -0.000000217243 * Math.pow(distance, 3)
+                    + 0.0000386489 * Math.pow(distance, 2)
+                    + 0.00297592 * distance
+                    + 0.413722;
+
+            hoodServo.setPosition(originalPos - 0.4);
+
+            targetVelocity = (-0.0111536 * distance * distance
+                    - 4.00719 * distance
+                    - 1097.37524);
+
+        } else {
+            double originalPos = -5.81745e-7 * Math.pow(distance, 3)
+                    + 0.0000705013 * Math.pow(distance, 2)
+                    + 0.00433215 * distance
+                    + 0.212657;
+
+            hoodServo.setPosition(originalPos - 0.4);
+
+            targetVelocity = (-0.0590251 * Math.pow(distance, 2)
+                    + 2.85266 * distance
+                    - 1304.88019);
+        }
+    }
+
+    private void beginWait(double ms, boolean doshoot, int nextState) {
+        waitms = ms;
+        shooting = doshoot;
+        waitTimer.reset();
+        state = nextState;
+    }
+
+    private boolean waitDone() {
+        if (waitTimer.milliseconds() >= waitms) {
+            shooting = false;
             return true;
         }
         return false;
     }
 
-    private void startShotOneSecond() {
-        isShooting = true;
-        shotTimer.reset();
-        stateTimer.reset();
-        leftPusherServo.setPosition(leftPusherShootPos);
-        rightPusherServo.setPosition(rightPusherShootPos);
-    }
-
-    private void updateShotSequence() {
-        if (isShooting && shotTimer.milliseconds() >= 1000) {
-            leftPusherServo.setPosition(leftPusherIdlePos);
-            rightPusherServo.setPosition(rightPusherIdlePos);
-            isShooting = false;
-            stateTimer.reset();
-        }
-    }
-
     private void runFlywheelVelocityControl() {
-        double currentVelocity = rightFlywheelMotor.getVelocity();
-        double maxVelocity = rightFlywheelMotor.getMotorType().getMaxRPM()
-                * rightFlywheelMotor.getMotorType().getTicksPerRev() / 60.0;
+        double currentVelocity = outtake2Motor.getVelocity();
+        double maxVelocity = outtake2Motor.getMotorType().getMaxRPM()
+                * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
 
-        double normalizedError = (flywheelTargetVelocity - currentVelocity) / maxVelocity;
-        double pidTerm = flywheelKp * normalizedError;
+        double normalizedError = (targetVelocity - currentVelocity) / maxVelocity;
+        double pTerm = vkP * normalizedError;
 
-        double feedforwardTerm = flywheelKf * (flywheelTargetVelocity / maxVelocity);
+        double feedforward = vkF * (targetVelocity / maxVelocity);
         double batteryVoltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
-        feedforwardTerm *= 12.0 / batteryVoltage;
+        feedforward *= 12.0 / batteryVoltage;
 
-        double motorPower = Math.max(-1, Math.min(1, pidTerm + feedforwardTerm));
+        double power = Math.max(-1.0, Math.min(1.0, pTerm + feedforward));
 
-        leftFlywheelMotor.setPower(motorPower);
-        rightFlywheelMotor.setPower(motorPower);
+        outtake1Motor.setPower(power);
+        outtake2Motor.setPower(power);
+
+        telemetry.addData("Flywheel Target V", targetVelocity);
+        telemetry.addData("Flywheel Actual V", currentVelocity);
     }
 
-    // --- Face the bucket (simple proportional turn) ---
-    private void faceBucket() {
-        Pose pose = driveFollower.getPose();
+    private void runTurretAlwaysOn() {
+        Pose pose = follower.getPose();
         if (pose == null) return;
 
-        double dx = bucketX - pose.getX();
-        double dy = bucketY - pose.getY();
-        double targetHeading = Math.atan2(dy, dx); // radians
+        double dx = targetX - pose.getX();
+        double dy = targetY - pose.getY();
 
-        double error = angleWrapRad(targetHeading - pose.getHeading());
+        double fieldAngle = Math.atan2(dy, dx);
+        double desiredDeg = Math.toDegrees(fieldAngle - pose.getHeading());
+        desiredDeg = angleWrap(desiredDeg);
 
-        double turnPower = 0.8 * error;
-        turnPower = Math.max(-1.0, Math.min(1.0, turnPower));
+        if (desiredDeg > threshold) desiredDeg = threshold;
+        if (desiredDeg < -threshold) desiredDeg = -threshold;
 
-        driveFollower.setTeleOpDrive(0, 0, turnPower, true);
+        turretPID.setPID(turretKp, turretKi, turretKd);
+        double currentDeg = getTurretAngleDeg();
+        double out = turretPID.calculate(currentDeg, desiredDeg);
+
+        if (out > turretMaxPower) out = turretMaxPower;
+        if (out < -turretMaxPower) out = -turretMaxPower;
+
+        turret.setPower(out);
     }
 
-    private double angleWrapRad(double angle) {
-        return ((angle + Math.PI) % (2 * Math.PI) + (2 * Math.PI)) % (2 * Math.PI) - Math.PI;
+    private double getTurretAngleDeg() {
+        double voltage = turretEncoder.getVoltage();
+        double angle = (voltage / turretEncoder.getMaxVoltage()) * 360.0;
+        angle -= turretZeroDeg;
+        return angleWrap(angle);
     }
 
-    // --- Path definitions ---
-    public static class Paths {
-        public PathChain toBallsFromBin;
-        public PathChain ballsToLeverAndBack;
-        public PathChain sweepBallsMidLane;
-        public PathChain returnToBinFromBalls;
-
-        public PathChain binToBallsLowLane;
-        public PathChain ballsLowLaneBackToBin;
-
-        public PathChain binToBallsLowLaneAgain;
-        public PathChain ballsLowLaneAgainBackToBin;
-
-        public PathChain binToBallsUpperLaneCurve;
-        public PathChain sweepBallsUpperLane;
-        public PathChain returnToBinFromUpperLane;
-
-        public PathChain binToBallsLowerLaneCurve;
-        public PathChain sweepBallsLowerLane;
-        public PathChain returnToBinFromLowerLane;
-
-        public PathChain parkLeftFromBin;
-
-        public Paths(Follower f) {
-            // Define all paths exactly as before
-            toBallsFromBin = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(20.866, 123.392), new Pose(48.333, 95.669)))
-                    .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(135))
-                    .build();
-
-            ballsToLeverAndBack = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(48.333, 95.669),
-                            new Pose(82.344, 59.271),
-                            new Pose(41.172, 59.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                    .build();
-
-            sweepBallsMidLane = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(41.172, 59.867), new Pose(15.316, 59.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .build();
-
-            returnToBinFromBalls = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(15.316, 59.867),
-                            new Pose(79.360, 65.635),
-                            new Pose(48.333, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
-                    .build();
-
-            binToBallsLowLane = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(48.333, 95.867),
-                            new Pose(51.913, 37.790),
-                            new Pose(11.736, 62.456)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(135))
-                    .build();
-
-            ballsLowLaneBackToBin = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(11.736, 62.456),
-                            new Pose(79.360, 65.635),
-                            new Pose(48.333, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(135))
-                    .build();
-
-            binToBallsLowLaneAgain = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(48.333, 95.867),
-                            new Pose(51.913, 37.790),
-                            new Pose(11.935, 62.456)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(150))
-                    .build();
-
-            ballsLowLaneAgainBackToBin = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(11.935, 62.456),
-                            new Pose(79.360, 79.360),
-                            new Pose(48.333, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(135))
-                    .build();
-
-            binToBallsUpperLaneCurve = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(48.333, 95.867),
-                            new Pose(57.681, 85.127),
-                            new Pose(41.172, 83.735)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                    .build();
-
-            sweepBallsUpperLane = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(41.172, 83.735), new Pose(16.310, 83.934)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .build();
-
-            returnToBinFromUpperLane = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(16.310, 83.934), new Pose(48.333, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
-                    .build();
-
-            binToBallsLowerLaneCurve = f.pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(48.333, 95.867),
-                            new Pose(70.609, 58.077),
-                            new Pose(42.167, 36.000)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                    .build();
-
-            sweepBallsLowerLane = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(42.167, 36.000), new Pose(16.509, 35.801)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .build();
-
-            returnToBinFromLowerLane = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(16.509, 35.801), new Pose(48.333, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
-                    .build();
-
-            parkLeftFromBin = f.pathBuilder()
-                    .addPath(new BezierLine(new Pose(48.333, 95.867), new Pose(15.913, 95.867)))
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                    .build();
-        }
+    private double angleWrap(double angle) {
+        return ((angle + 180) % 360 + 360) % 360 - 180;
     }
+
+    @Override public void opLoopHook() {}
+    @Override public void opTeardown() {}
 }

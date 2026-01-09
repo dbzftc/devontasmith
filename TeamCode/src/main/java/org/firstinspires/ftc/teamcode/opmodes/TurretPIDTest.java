@@ -3,27 +3,24 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
 
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
@@ -33,60 +30,81 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 @TeleOp(name = "TurretPIDTest")
 public class TurretPIDTest extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
-    private boolean leftTriggerLast = false;
-    private boolean rightTriggerLast = false;
-    public static double targetX = 18;
-    public static double targetY = 0;
 
-    public static double targetVelocity = -200; // ticks/sec
-    protected Servo rightpushServo, leftpushServo, hoodServo;
-    private PIDController controller;
-    private DcMotorEx motor1, motor2;
-    protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
-    private VoltageSensor batteryVoltageSensor;
-    public static double kP = 0.025;
-    public static double kI = 0.0;
-    public static double kD = 0.0000001;
-    public static double kF = 0.5;
-    public static double vkP = 2.742;
-    public static double vkI = 0.0;
-    public static double vkD = 0.0011;
-    public static double vkF = 1.125;
-    public static double hoodServoPos = 0.7;
+    public static double targetX = -1.6;
+    public static double targetY = 121.145;
+
+    public static double targetVelocity = -1400;
+    public static double vkP = 4.8;
+    public static double vkF = 1.25;
+
+
+    public static double shotLeadTime = 0.8;
+
+    public static double hoodServoPos = 0.33;
+
+    public static double holdOpenPos = 0.2;
+    public static double holdClosePos = 0.06;
+
     public static double TV = -1400;
-    public static double threshold = 70;
-    public static double offsetDistance = 110.0; // distance threshold to apply turret offset
+
+    public static double threshold = 175;
+    public static double offsetDistance = 110.0;
     public static double offsetAngle = 0;
+
+    public static double turretZeroDeg = 360;
+
+    public static double leftPushShoot = 0.66;
+    public static double rightPushShoot = 0.69;
+
+    public static double leftPushIdle = 0.06;
+    public static double rightPushIdle = 0.09;
+
+    public static double turretKp = 0.014;
+    public static double turretKi = 0.0;
+    public static double turretKd = 0.001;
+
+    public static double turretDeadbandDeg = 0.0;
+    public static double turretMaxPower = 0.30;
+
+    public static double turretKs = 0.0; // SET TO 0 AS REQUESTED
+    public static double turretFFDeadbandDeg = 0.0;
+
+    public static double turretPivotForwardIn = 0.0;
+    public static double turretPivotLeftIn = 0.0;
+
+    public static double startX = 0.0;
+    public static double startY = 0.0;
+    public static double startHeadingDeg = 0.0;
+    // Add these with your other variables
+    private Pose lastPose = new Pose();
+    private double lastTime = 0;
+    private Pose currentVelocity = new Pose();
+    private ElapsedTime velocityTimer = new ElapsedTime();
+
+    protected Servo rightpushServo, leftpushServo, hoodServo, holdServo;
+    protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor, frontLeft, frontRight, backLeft, backRight;
+    private DcMotorEx motor1, motor2;
+
+    private VoltageSensor batteryVoltageSensor;
+    private AnalogInput turretEncoder;
 
     private boolean shootLast = false;
     private boolean shooting = false;
-    private boolean autoHoodActive = false;
-    private boolean lastXButton = false;
 
-    public static double turretZeroDeg = 336.0;
-    public static double intakePos = 0;
-    private AnalogInput turretEncoder;
+    private boolean autoHoodActive = false;
+    private boolean lastAButton = false;
 
     private boolean aimingActive = false;
+    private boolean leftTriggerLast = false;
+
     boolean intakeForwardOn = false;
     boolean intakeReverseOn = false;
 
     boolean lastLeftBumper = false;
     boolean lastRightBumper = false;
-    private PIDController turretBigPID; //Doesn't do anything anymore because we set the effective range of smallPID to 700
-    private PIDController turretSmallPID;
 
-    public static double turretPidSwitchDeg = 20;
-
-    public static double turretBigKp = 0.01;
-    public static double turretBigKi = 0.0;
-    public static double turretBigKd = 0.01;
-
-    public static double turretSmallKp = 0.0075;
-    public static double turretSmallKi = 0.0;
-    public static double turretSmallKd = 0.075;
-    public static double powMult = 1;
-    public static double multiplier = 0.75;
+    private PIDController turretPID;
 
 
     private enum TurretState {
@@ -103,47 +121,47 @@ public class TurretPIDTest extends DbzOpMode {
 
     @Override
     public void opInit() {
-
         motor1 = hardwareMap.get(DcMotorEx.class, "outtake1Motor");
         motor2 = hardwareMap.get(DcMotorEx.class, "outtake2Motor");
+
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
-        hoodServo.setPosition(0.7);
+        holdServo = hardwareMap.get(Servo.class, "holdServo");
+
+        hoodServo.setPosition(hoodServoPos);
+        holdServo.setPosition(holdClosePos);
+        leftpushServo.setPosition(leftPushIdle);
+        rightpushServo.setPosition(rightPushIdle);
+
         intakeMotor = robot.intakeMotor;
-        motor1.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        motor2.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        motor1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        motor2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         outtake1Motor = robot.outtake1Motor;
         outtake2Motor = robot.outtake2Motor;
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         motor2.setDirection(DcMotorEx.Direction.FORWARD);
         motor1.setDirection(DcMotorEx.Direction.REVERSE);
 
-        turretBigPID = new PIDController(turretBigKp, turretBigKi, turretBigKd);
-        turretSmallPID = new PIDController(turretSmallKp, turretSmallKi, turretSmallKd);
+        outtake1Motor.setDirection(DcMotorEx.Direction.REVERSE);
+        outtake2Motor.setDirection(DcMotorEx.Direction.FORWARD);
 
-        turretBigPID.setTolerance(1.0);
-        turretSmallPID.setTolerance(0.5);
-
-
-        controller = new PIDController(kP, kI, kD);
+        turretPID = new PIDController(turretKp, turretKi, turretKd);
+        turretPID.setTolerance(1.0);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
+        // TURRET MOTOR INITIALIZATION - FIXED
         turret = hardwareMap.get(DcMotorEx.class, DbzHardwareMap.Motor.turret.getName());
+        turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        turret.setDirection(DcMotorEx.Direction.FORWARD); // Adjust if needed
+
         turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0.0, 0.0, 0.0));
-
-
-        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-
-        controller = new PIDController(kP, kI, kD);
-        controller.setTolerance(1.0);
+        follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
 
         PanelsConfigurables.INSTANCE.refreshClass(this);
 
@@ -153,153 +171,209 @@ public class TurretPIDTest extends DbzOpMode {
         }
 
         follower.startTeleopDrive();
-        controller.reset();
     }
 
     @Override
     public void opLoop() {
 
-        boolean xButton = gamepad1.a;
-        if (xButton & !lastXButton) {
+        boolean aButton = gamepad1.a;
+        if (aButton && !lastAButton) {
             autoHoodActive = !autoHoodActive;
         }
-        lastXButton = xButton;
-        Pose ppose = follower.getPose();
+        lastAButton = aButton;
 
+        Pose ppose = follower.getPose();
+//
         if (autoHoodActive) {
             if (ppose != null) {
                 double dx = targetX - ppose.getX();
                 double dy = targetY - ppose.getY();
-                double distance = Math.sqrt(dx*dx + dy*dy);
+                double distance = Math.sqrt(dx * dx + dy * dy);
 
-                hoodServo.setPosition(-0.000000217243 * Math.pow(distance, 3) + 0.0000386489 * Math.pow(distance, 2) + 0.00297592 * distance + 0.413722 - 0.08 );
-                targetVelocity = (-0.0111536 * distance * distance - 4.00719 * distance -1097.37524);
+                if (distance >= 110) {
+                    // Original Far Range Math
+                    double originalPos = -0.000000217243 * Math.pow(distance, 3)
+                            + 0.0000386489 * Math.pow(distance, 2)
+                            + 0.00297592 * distance
+                            + 0.413722;
+
+                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
+                    hoodServo.setPosition(originalPos - 0.4);
+
+                    targetVelocity = (-0.0111536 * distance * distance
+                            - 4.00719 * distance
+                            - 1097.37524);
+
+                } else if (distance < 100) {
+                    // Original Close Range Math
+                    double originalPos = -5.81745e-7 * Math.pow(distance, 3)
+                            + 0.0000705013 * Math.pow(distance, 2)
+                            + 0.00433215 * distance
+                            + 0.212657;
+
+                    // Shifting the 0.7 start down to 0.3
+                    hoodServo.setPosition(originalPos - 0.4);
+
+                    targetVelocity = (-0.0590251 * Math.pow(distance, 2)
+                            + 2.85266 * distance
+                            - 1304.88019);
+                }
             } else {
-                hoodServo.setPosition(0.7);
+                hoodServo.setPosition(hoodServoPos);
                 targetVelocity = 0;
             }
-        } else {
-            hoodServo.setPosition(hoodServoPos);
-            targetVelocity = TV;
-        }
-        Pose pppose = follower.getPose();
-        if(pppose!=null){
-            double dx = targetX - ppose.getX();
-            double dy = targetY - ppose.getY();
-            double distance = Math.sqrt(dx*dx + dy*dy);
-            telemetry.addData("Distance to target", distance);
-        } else {
-            telemetry.addData("Distance to target", "Pose is null");
         }
 
-        intakeMotor.setPower(intakePos);
-//        hoodServo.setPosition(hoodServoPos);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
                 -gamepad1.right_stick_x,
                 true
         );
+        updateVelocity();
         shoot();
-
         activeIntake();
+
         follower.update();
         aim();
+
+        runFlywheelVelocityControl();
 
         if (follower.getCurrentPath() != null) {
             draw();
         }
 
+        // COMPREHENSIVE TELEMETRY
+        addDebugTelemetry();
 
         telemetryM.update(telemetry);
-//        robot.intakeMotor.setPower(-1);
-//        controller.setPID(vkP, vkI, vkD);
-//
-//        controller.setIntegrationBounds(-0.3,0.3);
-//        double VcurrentVelocity = motor2.getVelocity();
-//        double pid = controller.calculate(VcurrentVelocity, targetVelocity);
-//
-//        // Battery compensation for feedforward
-//        double batteryVoltage = batteryVoltageSensor.getVoltage();
-//        double feedforward = (vkF * targetVelocity) * (12.0 / batteryVoltage);
-//
-//        double power = pid + feedforward;
-//        power = Math.max(-1, Math.min(1, power));
-//
-//        motor1.setPower(power);
-//        motor2.setPower(power);
-        double currentVelocity = motor2.getVelocity();
-
-
-        double maxVelocity = motor2.getMotorType().getMaxRPM() *
-                motor2.getMotorType().getTicksPerRev() / 60.0;
-
-        double velocityError = (targetVelocity - currentVelocity) / maxVelocity;
-        double pidOutput = vkP * velocityError;
-
-        double ff = vkF * (targetVelocity / maxVelocity);
-        double batteryVoltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
-        ff *= 12.0 / batteryVoltage;
-        double power = pidOutput + ff;
-
-        power = Math.max(-1.0, Math.min(1.0, power));
-
-        outtake1Motor.setPower(power);  // reverse if necessary
-        outtake2Motor.setPower(power);
-
-        telemetry.addData("Target Velocity", targetVelocity);
-        telemetry.addData("Current Velocity", currentVelocity);
-        telemetry.addData("Error (ticks/sec)", targetVelocity - currentVelocity);
-        telemetry.addData("PID Output", pidOutput);
-        telemetry.addData("Feedforward", ff);
-        telemetry.addData("Motor Power", power);
-        telemetry.addData("Battery Voltage", batteryVoltage);
-//        telemetry.addData("X", ppose.getX());
-//        telemetry.addData("Y", ppose.getY());
         telemetry.update();
     }
+    private void updateVelocity() {
+        Pose currentPose = follower.getPose();
+        double currentTime = velocityTimer.seconds();
+
+        // Avoid dividing by zero if the loop runs too fast
+        if (currentPose == null || currentTime - lastTime < 0.005) return;
+
+        double dt = currentTime - lastTime;
+
+        // Calculate change in position
+        double dx = currentPose.getX() - lastPose.getX();
+        double dy = currentPose.getY() - lastPose.getY();
+
+        // velocity = distance / time
+        double vx = dx / dt;
+        double vy = dy / dt;
+
+        // Store it in a Pose object (we don't care about heading velocity for this)
+        currentVelocity = new Pose(vx, vy, 0);
+
+        // Update last values for the next loop
+        lastPose = currentPose;
+        lastTime = currentTime;
+    }
+    private void addDebugTelemetry() {
+        Pose pose = follower.getPose();
+
+        // TARGET INFORMATION
+        telemetryM.addData("=== TARGET ===", "");
+        telemetryM.addData("Target X", String.format("%.2f", targetX));
+        telemetryM.addData("Target Y", String.format("%.2f", targetY));
+
+        // CURRENT POSITION
+        telemetryM.addData("=== CURRENT POSITION ===", "");
+        if (pose != null) {
+            telemetryM.addData("Current X", String.format("%.2f", pose.getX()));
+            telemetryM.addData("Current Y", String.format("%.2f", pose.getY()));
+            telemetryM.addData("Heading (rad)", String.format("%.3f", pose.getHeading()));
+            telemetryM.addData("Heading (deg)", String.format("%.2f", Math.toDegrees(pose.getHeading())));
+
+            double dx = targetX - pose.getX();
+            double dy = targetY - pose.getY();
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            telemetryM.addData("Distance to Target", String.format("%.2f", distance));
+        } else {
+            telemetryM.addData("Pose", "NULL - FOLLOWER NOT READY");
+        }
+
+        // TURRET ENCODER RAW DATA
+        telemetryM.addData("=== TURRET ENCODER ===", "");
+        telemetryM.addData("Encoder Voltage", String.format("%.3f", turretEncoder.getVoltage()));
+        telemetryM.addData("Max Voltage", String.format("%.3f", turretEncoder.getMaxVoltage()));
+        telemetryM.addData("Turret Zero Deg", turretZeroDeg);
+
+        // TURRET STATE
+        telemetryM.addData("=== TURRET STATE ===", "");
+        telemetryM.addData("Aiming Active", aimingActive ? "YES (Left Trigger)" : "NO (Press Left Trigger)");
+        telemetryM.addData("Turret State", turretState.toString());
+        telemetryM.addData("Current Angle (deg)", String.format("%.2f", getTurretAngleDeg()));
+        telemetryM.addData("Desired Angle (deg)", String.format("%.2f", getDesiredTurretAngleDeg()));
+        telemetryM.addData("Clamped Angle (deg)", String.format("%.2f", overshoot()));
+
+        // TURRET PID
+        telemetryM.addData("=== TURRET PID ===", "");
+        telemetryM.addData("Kp", turretKp);
+        telemetryM.addData("Ki", turretKi);
+        telemetryM.addData("Kd", turretKd);
+        telemetryM.addData("Ks (FF)", turretKs);
+        telemetryM.addData("Deadband (deg)", turretDeadbandDeg);
+        telemetryM.addData("Max Power", turretMaxPower);
+        telemetryM.addData("Threshold (deg)", threshold);
+
+        // TURRET POWER
+        telemetryM.addData("=== TURRET POWER ===", "");
+        telemetryM.addData("Turret Motor Power", String.format("%.3f", turret.getPower()));
+
+        // GAMEPAD STATUS
+        telemetryM.addData("=== CONTROLS ===", "");
+        telemetryM.addData("Left Trigger", String.format("%.2f", dbzGamepad1.left_trigger));
+        telemetryM.addData("Right Trigger", String.format("%.2f", dbzGamepad1.right_trigger));
+
+        // PIVOT OFFSET
+        telemetryM.addData("=== TURRET PIVOT ===", "");
+        telemetryM.addData("Pivot Forward (in)", turretPivotForwardIn);
+        telemetryM.addData("Pivot Left (in)", turretPivotLeftIn);
 
 
+
+
+        if (pose != null) {
+            double heading = pose.getHeading();
+            double offX = turretPivotForwardIn * Math.cos(heading) - turretPivotLeftIn * Math.sin(heading);
+            double offY = turretPivotForwardIn * Math.sin(heading) + turretPivotLeftIn * Math.cos(heading);
+            double pivotX = pose.getX() + offX;
+            double pivotY = pose.getY() + offY;
+
+            telemetryM.addData("Pivot X", String.format("%.2f", pivotX));
+            telemetryM.addData("Pivot Y", String.format("%.2f", pivotY));
+        }
+    }
 
     private void shoot() {
-
         boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
         if (rightTriggerHeld && !shootLast && !shooting) {
-            leftpushServo.setPosition(0.9);
-            rightpushServo.setPosition(0.86);
+            holdServo.setPosition(holdOpenPos);
+            leftpushServo.setPosition(leftPushShoot);
+            rightpushServo.setPosition(rightPushShoot);
 
             intaketimer.reset();
             shooting = true;
         }
 
         if (shooting && intaketimer.milliseconds() > 1000) {
-            leftpushServo.setPosition(0.25);   // OPEN again (idle)
-            rightpushServo.setPosition(0.21);
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
+            holdServo.setPosition(holdClosePos);
 
             shooting = false;
         }
 
-        shootLast = rightTriggerLast;
-
-
-
-//        if (leftBumperPressed && !leftBumperLast) {
-//            if (!Shooting) {
-//                outtake1Motor.setPower(-power);
-//                outtake2Motor.setPower(power);
-//                Shooting = true;
-//            } else {
-//                outtake1Motor.setPower(0);
-//                outtake2Motor.setPower(0);
-//                Shooting = false;
-//            }
-//        }
-//
-//        leftBumperLast = leftBumperPressed;
+        shootLast = rightTriggerHeld;
     }
 
     private void activeIntake() {
-        boolean leftBumper  = gamepad1.left_bumper;
+        boolean leftBumper = gamepad1.left_bumper;
         boolean rightBumper = gamepad1.right_bumper;
 
         if (shooting) return;
@@ -312,46 +386,34 @@ public class TurretPIDTest extends DbzOpMode {
             intakeReverseOn = !intakeReverseOn;
             intakeForwardOn = false;
         }
+
         if (intakeForwardOn) {
             intakeMotor.setPower(1);
-            leftpushServo.setPosition(0.18);
-            rightpushServo.setPosition(0.14);
-        }
-        else if (intakeReverseOn) {
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
+        } else if (intakeReverseOn) {
             intakeMotor.setPower(-1);
-            leftpushServo.setPosition(0.18);
-            rightpushServo.setPosition(0.14);
-        }
-        else {
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
+        } else {
             intakeMotor.setPower(0);
-            leftpushServo.setPosition(0.30);
-            rightpushServo.setPosition(0.26);
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
         }
-        lastLeftBumper  = leftBumper;
+
+        lastLeftBumper = leftBumper;
         lastRightBumper = rightBumper;
     }
 
-
-
     private void aim() {
-        boolean leftTriggerPressed  = dbzGamepad1.left_trigger > 0.1;
+        boolean leftTriggerPressed = dbzGamepad1.left_trigger > 0.1;
         if (leftTriggerPressed && !leftTriggerLast) {
             aimingActive = !aimingActive;
-            turretBigPID.reset();
-            turretSmallPID.reset();
+            turretPID.reset();
         }
         leftTriggerLast = leftTriggerPressed;
 
-        // --- Choose target angle ---
-//        double targetAngleDeg;
-//        if (aimingActive) {
-//            targetAngleDeg = getDesiredTurretAngleDeg();
-//        } else {
-//            targetAngleDeg = 0.0; // forward (3.08V)
-//        }
-
         double targetAngleDeg;
-        double desired = angleWrap(getDesiredTurretAngleDeg());
 
         if (!aimingActive) {
             turretState = TurretState.NORMAL;
@@ -384,26 +446,67 @@ public class TurretPIDTest extends DbzOpMode {
         }
 
         double currentAngleDeg = getTurretAngleDeg();
-
         double errorDeg = angleWrap(targetAngleDeg - currentAngleDeg);
 
-        double output;
-        if (Math.abs(errorDeg) > turretPidSwitchDeg) {
-            turretBigPID.setPID(turretBigKp, turretBigKi, turretBigKd);
-            output = turretBigPID.calculate(0, errorDeg);
-        } else {
-            turretSmallPID.setPID(turretSmallKp, turretSmallKi, turretSmallKd);
-            output = turretSmallPID.calculate(0, errorDeg);
+        if (Math.abs(errorDeg) <= turretDeadbandDeg) {
+            turret.setPower(0);
+            telemetryM.addData("Turret Status", "AT TARGET");
+            telemetryM.addData("Target Angle (deg)", String.format("%.2f", targetAngleDeg));
+            telemetryM.addData("Error (deg)", String.format("%.2f", errorDeg));
+            telemetryM.addData("PID Output", 0.0);
+            telemetryM.addData("FF Output", 0.0);
+            telemetryM.addData("Total Output", 0.0);
+            return;
         }
 
-        output = Math.max(-1.0, Math.min(1.0, output));
+        // FIXED PID CALCULATION
+        turretPID.setPID(turretKp, turretKi, turretKd);
+        double pidOut = turretPID.calculate(currentAngleDeg, targetAngleDeg);
+
+        // Feedforward with Ks = 0
+        double ff = 0.0;
+        if (Math.abs(errorDeg) > turretFFDeadbandDeg) {
+            ff = Math.copySign(turretKs, errorDeg);
+        }
+
+        double output = pidOut + ff;
+
+        // Clamp output
+        if (output > turretMaxPower) output = turretMaxPower;
+        if (output < -turretMaxPower) output = -turretMaxPower;
 
         turret.setPower(output);
 
-        telemetryM.addData("Turret Angle (deg)", currentAngleDeg);
-        telemetryM.addData("Target Angle (deg)", targetAngleDeg);
-        telemetryM.addData("Error (deg)", errorDeg);
-        telemetryM.addData("Turret Power", output);
+        telemetryM.addData("Turret Status", "MOVING");
+        telemetryM.addData("Target Angle (deg)", String.format("%.2f", targetAngleDeg));
+        telemetryM.addData("Error (deg)", String.format("%.2f", errorDeg));
+        telemetryM.addData("PID Output", String.format("%.4f", pidOut));
+        telemetryM.addData("FF Output", String.format("%.4f", ff));
+        telemetryM.addData("Total Output", String.format("%.4f", output));
+    }
+
+    private void runFlywheelVelocityControl() {
+        double currentVelocity = outtake2Motor.getVelocity();
+        double maxVelocity = outtake2Motor.getMotorType().getMaxRPM()
+                * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
+
+        double normalizedError = (targetVelocity - currentVelocity) / maxVelocity;
+        double pTerm = vkP * normalizedError;
+
+        double feedforward = vkF * (targetVelocity / maxVelocity);
+        double batteryVoltage = Math.max(10.5, batteryVoltageSensor.getVoltage());
+        feedforward *= 12.0 / batteryVoltage;
+
+        double power = Math.max(-1.0, Math.min(1.0, pTerm + feedforward));
+
+        outtake1Motor.setPower(power);
+        outtake2Motor.setPower(power);
+
+        // --- ADD TELEMETRY FOR GRAPHING ---
+        // Dashboard will graph any numerical value.
+        // Sending them like this makes them easy to find.
+        telemetry.addData("Flywheel Target V", targetVelocity);
+        telemetry.addData("Flywheel Actual V", currentVelocity);
     }
 
     private double getTurretAngleDeg() {
@@ -412,36 +515,29 @@ public class TurretPIDTest extends DbzOpMode {
         angle -= turretZeroDeg;
         return angleWrap(angle);
     }
-
     private double getDesiredTurretAngleDeg() {
         Pose pose = follower.getPose();
-        if (pose == null) {
-            // Follower hasn't initialized yet, just return current turret angle
-            return getTurretAngleDeg();
-        }
+        if (pose == null) return getTurretAngleDeg();
 
-        double dx = targetX - pose.getX();
-        double dy = targetY - pose.getY();
+        // FIX: Use the calculated velocity
+        double vx = currentVelocity.getX();
+        double vy = currentVelocity.getY();
 
-        double fieldAngle = Math.atan2(dy, dx);
-        double turretAngle = Math.toDegrees(fieldAngle - pose.getHeading());
+        // Calculate future position
+        double futureX = pose.getX() + vx * shotLeadTime;
+        double futureY = pose.getY() + vy * shotLeadTime;
 
-        double distance = Math.sqrt(dx*dx + dy*dy);
-        if (distance >= offsetDistance) {
-            turretAngle += offsetAngle; // apply right shift
-        }
+        double fieldAngle = Math.atan2(targetY - futureY, targetX - futureX);
+        double turretAngleDeg = Math.toDegrees(fieldAngle - pose.getHeading());
 
-        return turretAngle;
+        return angleWrap(turretAngleDeg);
     }
+
 
     private double overshoot() {
         double desired = angleWrap(getDesiredTurretAngleDeg());
-        if (desired > threshold) {
-            return threshold;
-        }
-        if (desired < -threshold) {
-            return -threshold;
-        }
+        if (desired > threshold) return threshold;
+        if (desired < -threshold) return -threshold;
         return desired;
     }
 
@@ -450,12 +546,8 @@ public class TurretPIDTest extends DbzOpMode {
     }
 
     @Override
-    public void opLoopHook() {
-        // required by DbzOpMode
-    }
+    public void opLoopHook() {}
 
     @Override
-    public void opTeardown() {
-        // required by DbzOpMode
-    }
+    public void opTeardown() {}
 }

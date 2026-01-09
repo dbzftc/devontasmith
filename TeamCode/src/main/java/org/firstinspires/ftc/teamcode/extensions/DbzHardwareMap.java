@@ -1,17 +1,15 @@
 package org.firstinspires.ftc.teamcode.extensions;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.pedropathing.follower.Follower;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
+
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+
 public class DbzHardwareMap {
+
 
     public DcMotorEx frontRight, backRight, backLeft, frontLeft;
     //    public DcMotorEx hoodMotor;
@@ -27,6 +25,7 @@ public class DbzHardwareMap {
 //    public Limelight3A limelight;
 //    private Follower follower;
 
+
     public Servo holdServo;
     public Servo shoot1Servo;
     public Servo shoot2Servo;
@@ -37,6 +36,8 @@ public class DbzHardwareMap {
     public Servo rightpushServo;
     public Servo leftpushServo;
     public AnalogInput turretEncoder;
+
+
 
 
     public enum Motor {
@@ -52,14 +53,20 @@ public class DbzHardwareMap {
         turret("turret"),
         rightpushServo("rightpushServo"),
         leftpushServo("leftpushServo"),
-        hoodServo("hoodServo");
+        hoodServo("hoodServo"),
+
+
+        holdServo("holdServo");
+
 
 //        flywheel("flywheelMotor");
+
 
         private final String name;
         Motor(String name) { this.name = name; }
         public String getName() { return name; }
     }
+
 
     public DbzHardwareMap(HardwareMap hwMap) {
         frontRight = hwMap.get(DcMotorEx.class, Motor.frontright.getName());
@@ -68,6 +75,7 @@ public class DbzHardwareMap {
         frontLeft = hwMap.get(DcMotorEx.class, Motor.frontleft.getName());
         turretEncoder = hwMap.get(AnalogInput.class, "turretEncoder");
 
+
         turret = hwMap.get(DcMotorEx.class, Motor.turret.getName());
 //
 //        hoodMotor = hwMap.get(DcMotorEx.class, Motor.hood.getName());
@@ -75,6 +83,7 @@ public class DbzHardwareMap {
         rightpushServo = hwMap.get(Servo.class, "rightpushServo");
         leftpushServo = hwMap.get(Servo.class, "leftpushServo");
         hoodServo = hwMap.get(Servo.class, "hoodServo");
+        holdServo = hwMap.get(Servo.class, "holdServo");
         outtake1Motor = hwMap.get(DcMotorEx.class, Motor.outtake1Motor.getName());
         outtake2Motor = hwMap.get(DcMotorEx.class, Motor.outtake2Motor.getName());
 //        flywheelMotor = hwMap.get(DcMotorEx.class, Motor.flywheel.getName());
@@ -83,11 +92,16 @@ public class DbzHardwareMap {
 //        shoot2Servo = hwMap.get(Servo.class, "shoot2Servo");
 
 
+
+
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
         backRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
+
 //        limelight = hwMap.get(Limelight3A.class, "limelight");
     }
 }
+
+
