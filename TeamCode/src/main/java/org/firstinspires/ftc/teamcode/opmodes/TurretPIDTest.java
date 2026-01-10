@@ -18,6 +18,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -25,6 +26,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
+
 
 @Config
 @TeleOp(name = "TurretPIDTest")
@@ -66,6 +68,7 @@ public class TurretPIDTest extends DbzOpMode {
 
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 0.30;
+
 
     public static double turretKs = 0.0; // SET TO 0 AS REQUESTED
     public static double turretFFDeadbandDeg = 0.0;
@@ -118,6 +121,10 @@ public class TurretPIDTest extends DbzOpMode {
 
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
+    protected DistanceSensor sensor1, sensor2;
+    protected Servo light;
+
+    public static double dthresh = 2.0;
 
     @Override
     public void opInit() {
@@ -183,7 +190,26 @@ public class TurretPIDTest extends DbzOpMode {
         lastAButton = aButton;
 
         Pose ppose = follower.getPose();
-//
+
+
+        double dist1 = sensor1.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
+        double dist2 = sensor2.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
+
+
+        boolean detected1 = dist1 < dthresh;
+        boolean detected2 = dist2 < dthresh;
+
+        telemetryM.addData("=== PROXIMITY SENSORS ===", "");
+        telemetryM.addData("Sensor 1 (cm)", String.format("%.2f", dist1));
+        telemetryM.addData("Sensor 1 Detected", detected1 ? "YES" : "NO");
+        telemetryM.addData("Sensor 2 (cm)", String.format("%.2f", dist2));
+        telemetryM.addData("Sensor 2 Detected", detected2 ? "YES" : "NO");
+
+        if (detected1 || detected2) {
+            light.setPosition(0.5); // Example: Set to a specific color (e.g., Green or Yellow)
+        } else {
+            light.setPosition(0.0); // Off or Default color
+        }
         if (autoHoodActive) {
             if (ppose != null) {
                 double dx = targetX - ppose.getX();
@@ -275,6 +301,11 @@ public class TurretPIDTest extends DbzOpMode {
     }
     private void addDebugTelemetry() {
         Pose pose = follower.getPose();
+
+        sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
+        sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
+
+        light = hardwareMap.get(Servo.class, "light");
 
         // TARGET INFORMATION
         telemetryM.addData("=== TARGET ===", "");
