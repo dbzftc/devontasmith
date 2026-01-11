@@ -30,8 +30,8 @@ public class blueauto extends DbzOpMode {
     public static double targetX = 0.0;
     public static double targetY = 144.0;
 
-    public static double holdOpenPos = 0.3;
-    public static double holdClosePos = 0.06;
+    public static double holdOpenPos = 0.2;
+    public static double holdClosePos = 0.1;
 
     public static double leftPushShoot = 0.66;
     public static double rightPushShoot = 0.69;
@@ -41,10 +41,10 @@ public class blueauto extends DbzOpMode {
 
     public static double targetVelocity = -1500;
     public static double vkP = 4.8;
-    public static double vkF = 1.07;
+    public static double vkF = 1.05;
 
     public static double turretZeroDeg = 295;
-    public static double turretKp = 0.014;
+    public static double turretKp = 0.017;
     public static double turretKi = 0.0;
     public static double turretKd = 0.001;
     public static double turretMaxPower = 0.30;
@@ -228,7 +228,7 @@ public class blueauto extends DbzOpMode {
         }
 
 
-        holdServo.setPosition(shooting ? holdOpenPos : holdClosePos);
+        holdServo.setPosition(holdOpenPos);
         leftpushServo.setPosition(shooting ? leftPushShoot : leftPushIdle);
         rightpushServo.setPosition(shooting ? rightPushShoot : rightPushIdle);
 
@@ -273,10 +273,12 @@ public class blueauto extends DbzOpMode {
                 break;
             case 6:
                 if (!follower.isBusy()) beginWait(waitGate, false, 7);
+                holdServo.setPosition(holdClosePos);
                 break;
             case 7:
                 if (waitDone() || detected1 || detected2) {
                     follower.followPath(paths.Path5);
+                    holdServo.setPosition(holdOpenPos);
                     state = 8;
                 }
                 break;
@@ -291,10 +293,12 @@ public class blueauto extends DbzOpMode {
                 break;
             case 10:
                 if (!follower.isBusy()) beginWait(waitGate, false, 11);
+                holdServo.setPosition(holdClosePos);
                 break;
             case 11:
                 if (waitDone() || detected1 || detected2) {
                     follower.followPath(paths.Path7);
+                    holdServo.setPosition(holdOpenPos);
                     state = 12;
                 }
                 break;

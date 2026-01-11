@@ -62,12 +62,12 @@ public class blueside extends DbzOpMode {
     public static double leftPushIdle = 0.06;
     public static double rightPushIdle = 0.09;
 
-    public static double turretKp = 0.014;
+    public static double turretKp = 0.017;
     public static double turretKi = 0.0;
     public static double turretKd = 0.001;
 
     public static double turretDeadbandDeg = 0.0;
-    public static double turretMaxPower = 0.30;
+    public static double turretMaxPower = 0.3;
 
 
     public static double turretKs = 0.0; // SET TO 0 AS REQUESTED
@@ -150,7 +150,7 @@ public class blueside extends DbzOpMode {
 
 
         hoodServo.setPosition(hoodServoPos);
-
+        holdServo.setPosition(holdClosePos);
         leftpushServo.setPosition(leftPushIdle);
         rightpushServo.setPosition(rightPushIdle);
 
@@ -183,7 +183,7 @@ public class blueside extends DbzOpMode {
         follower = Constants.createFollower(hardwareMap);
         //follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
         //follower = Constants.createFollower(hardwareMap);
-        holdServo.setPosition(holdClosePos);
+
 
         follower.setStartingPose(org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose);
 
@@ -245,7 +245,7 @@ public class blueside extends DbzOpMode {
                 double physicalDistance = Math.sqrt(dx * dx + dy * dy);
 
                 // 2. Normalize it for your 125" scale regression
-                double distance = physicalDistance * (125.0 / 144.0);
+                double distance = physicalDistance * (120.0 / 144.0);
 
                 if (distance >= 110) {
                     // Far Range Math (Now receiving the 125-scale input it expects)

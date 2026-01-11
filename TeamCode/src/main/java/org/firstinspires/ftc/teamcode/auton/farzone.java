@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
-import org.firstinspires.ftc.teamcode.util.PoseCache;
+import org.firstinspires.ftc.teamcode.opmodes.PoseCache;
 
 @Config
 @Autonomous(name = "farzone", group = "Autonomous")
@@ -36,7 +36,7 @@ public class farzone extends DbzOpMode {
     public static double hoodServoPos = 0.6;
 
     public static double holdOpenPos = 0.3;
-    public static double holdClosePos = 0.06;
+    public static double holdClosePos = 0.0;
     public static double leftPushShoot = 0.66;
     public static double rightPushShoot = 0.69;
     public static double leftPushIdle = 0.06;
