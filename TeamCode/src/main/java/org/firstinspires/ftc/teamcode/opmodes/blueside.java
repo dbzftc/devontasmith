@@ -76,8 +76,8 @@ public class blueside extends DbzOpMode {
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double startX = 9;
-    public static double startY = 9;
+    public static double startX = 8;
+    public static double startY = 8.5;
     public static double startHeadingDeg = 0.0;
     // Add these with your other variables
     private Pose lastPose = new Pose();
@@ -94,6 +94,13 @@ public class blueside extends DbzOpMode {
 
     private boolean shootLast = false;
     private boolean shooting = false;
+
+    private boolean Shooting = false;
+    private boolean ShootLast = false;
+    public static double hoodoffsettime = 100;
+    public static double hoodoffset = 0.05;
+    private boolean hoodOffsetActive = false;
+
 
     private boolean autoHoodActive = false;
     private boolean lastAButton = false;
@@ -234,50 +241,71 @@ public class blueside extends DbzOpMode {
         if(lighttimer.seconds()>3){
             lighttimer.reset();
         }
+//
+//        boolean RightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
+//
+//        if (RightTriggerHeld && !ShootLast && !Shooting) {
+//            intaketimer.reset();
+//            Shooting = true;
+//        }
+//
+//        if (Shooting && intaketimer.milliseconds() > hoodoffsettime) {
+//            hoodOffsetActive = true;
+//            Shooting = false;
+//        }
+//
+//        if (!RightTriggerHeld && ShootLast) {
+//            hoodOffsetActive = false;
+//        }
+//
+//        ShootLast = RightTriggerHeld;
 
 
-        if (autoHoodActive) {
+        if (autoHoodActive && !Shooting) {
             if (ppose != null) {
                 double dx = targetX - ppose.getX();
                 double dy = targetY - ppose.getY();
-
-                // 1. Calculate the actual physical distance on the 144" field
-                double physicalDistance = Math.sqrt(dx * dx + dy * dy);
-
-                // 2. Normalize it for your 125" scale regression
-                double distance = physicalDistance * (120.0 / 144.0);
-
-                if (distance >= 110) {
-                    // Far Range Math (Now receiving the 125-scale input it expects)
-                    double originalPos = -0.000000217243 * Math.pow(distance, 3)
-                            + 0.0000386489 * Math.pow(distance, 2)
-                            + 0.00297592 * distance
-                            + 0.413722;
-
-                    hoodServo.setPosition(originalPos - 0.4);
-
-                    targetVelocity = (-0.0111536 * distance * distance
-                            - 4.00719 * distance
-                            - 1097.37524);
-
-                } else if (distance < 100) {
-                    // Close Range Math
-                    double originalPos = -5.81745e-7 * Math.pow(distance, 3)
-                            + 0.0000705013 * Math.pow(distance, 2)
-                            + 0.00433215 * distance
-                            + 0.212657;
-
-                    hoodServo.setPosition(originalPos - 0.4);
-
-                    targetVelocity = (-0.0590251 * Math.pow(distance, 2)
-                            + 2.85266 * distance
-                            - 1304.88019);
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance >= 115) {
+//                    // Original Far Range Math
+//                    double originalPos = -0.000000217243 * Math.pow(distance, 3)
+//                            + 0.0000386489 * Math.pow(distance, 2)
+//                            + 0.00297592 * distance
+//                            + 0.413722;
+//                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
+//                    hoodServo.setPosition(originalPos-0.4);
+//                    targetVelocity = (-0.0111536 * distance * distance
+//                            - 4.00719 * distance
+//                            - 1097.37524);
+                    double originalPos = 0.000316354 * Math.pow(distance, 2)
+                            -0.0843748 * distance
+                            +6.1213;
+                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
+                    hoodServo.setPosition(originalPos);
+                    targetVelocity = (0.0502566 * distance * distance
+                            -25.86373 * distance
+                            +886.53277);
+                } else if (distance < 115) {
+                    // Original close Range Math
+                    double originalPos = 0.00000326247 * Math.pow(distance, 3)
+                            -0.000953594 * Math.pow(distance, 2)
+                            + 0.0932128 * distance
+                            -2.53108;
+                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
+                    hoodServo.setPosition(originalPos);
+                    targetVelocity = (0.0381071 * distance * distance
+                            -11.86256 * distance
+                            -717.83856);
                 }
+                //the two lines below are for regression
+//                targetVelocity = TV;
+//                hoodServo.setPosition(hoodServoPos);
             } else {
                 hoodServo.setPosition(hoodServoPos);
                 targetVelocity = 0;
             }
         }
+
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
@@ -289,7 +317,10 @@ public class blueside extends DbzOpMode {
         activeIntake();
 
         if (dbzGamepad1.x) {
-            follower.setPose(new Pose(0, 0, Math.toRadians(180)));
+            follower.setPose(new Pose(8, 8.5, Math.toRadians(180)));
+        }
+        if (dbzGamepad1.y){
+            follower.setPose(new Pose(132, 8.5, Math.toRadians(0)));
         }
 
         if (gamepad2.dpad_up && !lastUp2) {
@@ -330,6 +361,7 @@ public class blueside extends DbzOpMode {
         telemetryM.update(telemetry);
         telemetry.update();
     }
+
     private void updateVelocity() {
         Pose currentPose = follower.getPose();
         double currentTime = velocityTimer.seconds();
@@ -354,6 +386,7 @@ public class blueside extends DbzOpMode {
         lastPose = currentPose;
         lastTime = currentTime;
     }
+
     private void addDebugTelemetry() {
         Pose pose = follower.getPose();
 
@@ -442,6 +475,7 @@ public class blueside extends DbzOpMode {
             intaketimer.reset();
             shooting = true;
         }
+
 
         if (shooting && intaketimer.milliseconds() > 1000) {
             leftpushServo.setPosition(leftPushIdle);

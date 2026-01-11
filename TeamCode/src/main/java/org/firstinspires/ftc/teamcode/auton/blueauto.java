@@ -41,7 +41,7 @@ public class blueauto extends DbzOpMode {
 
     public static double targetVelocity = -1500;
     public static double vkP = 4.8;
-    public static double vkF = 1.05;
+    public static double vkF = 1.25;
 
     public static double turretZeroDeg = 295;
     public static double turretKp = 0.017;
