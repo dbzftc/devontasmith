@@ -16,7 +16,6 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -29,14 +28,15 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 
 @Config
-@TeleOp(name = "TurretPIDTest")
-public class TurretPIDTest extends DbzOpMode {
+@TeleOp(name = "blueside")
+public class blueside extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
+    private ElapsedTime lighttimer = new ElapsedTime();
 
-    public static double targetX = -1.6;
-    public static double targetY = 121.145;
+    public static double targetX = 0;
+    public static double targetY = 144;
 
-    public static double targetVelocity = -1400;
+    public static double targetVelocity = -500;
     public static double vkP = 4.8;
     public static double vkF = 1.25;
 
@@ -46,15 +46,15 @@ public class TurretPIDTest extends DbzOpMode {
     public static double hoodServoPos = 0.33;
 
     public static double holdOpenPos = 0.2;
-    public static double holdClosePos = 0.06;
+    public static double holdClosePos = 0.1;
 
     public static double TV = -1400;
 
-    public static double threshold = 175;
+    public static double threshold = 130;
     public static double offsetDistance = 110.0;
     public static double offsetAngle = 0;
 
-    public static double turretZeroDeg = 360;
+    public static double turretZeroDeg =295;
 
     public static double leftPushShoot = 0.66;
     public static double rightPushShoot = 0.69;
@@ -76,8 +76,8 @@ public class TurretPIDTest extends DbzOpMode {
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double startX = 0.0;
-    public static double startY = 0.0;
+    public static double startX = 9;
+    public static double startY = 9;
     public static double startHeadingDeg = 0.0;
     // Add these with your other variables
     private Pose lastPose = new Pose();
@@ -109,6 +109,11 @@ public class TurretPIDTest extends DbzOpMode {
 
     private PIDController turretPID;
 
+    private boolean lastUp2 = false;
+    private boolean lastDown2 = false;
+    private boolean lastLeft2 = false;
+    private boolean lastRight2 = false;
+
 
     private enum TurretState {
         NORMAL,
@@ -136,8 +141,16 @@ public class TurretPIDTest extends DbzOpMode {
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         holdServo = hardwareMap.get(Servo.class, "holdServo");
 
+        sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
+        sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
+
+        // If 'light' is also throwing errors, initialize it here too:
+        light = hardwareMap.get(Servo.class, "light");
+
+
+
         hoodServo.setPosition(hoodServoPos);
-        holdServo.setPosition(holdClosePos);
+
         leftpushServo.setPosition(leftPushIdle);
         rightpushServo.setPosition(rightPushIdle);
 
@@ -168,8 +181,14 @@ public class TurretPIDTest extends DbzOpMode {
         turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
+        //follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
+        //follower = Constants.createFollower(hardwareMap);
+        holdServo.setPosition(holdClosePos);
 
+        follower.setStartingPose(org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose);
+
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+        follower.update();
         PanelsConfigurables.INSTANCE.refreshClass(this);
 
         follower.update();
@@ -206,24 +225,35 @@ public class TurretPIDTest extends DbzOpMode {
         telemetryM.addData("Sensor 2 Detected", detected2 ? "YES" : "NO");
 
         if (detected1 || detected2) {
-            light.setPosition(0.5); // Example: Set to a specific color (e.g., Green or Yellow)
+            light.setPosition(0.5);
+            lighttimer.reset();// Example: Set to a specific color (e.g., Green or Yellow)
         } else {
             light.setPosition(0.0); // Off or Default color
         }
+
+        if(lighttimer.seconds()>3){
+            lighttimer.reset();
+        }
+
+
         if (autoHoodActive) {
             if (ppose != null) {
                 double dx = targetX - ppose.getX();
                 double dy = targetY - ppose.getY();
-                double distance = Math.sqrt(dx * dx + dy * dy);
+
+                // 1. Calculate the actual physical distance on the 144" field
+                double physicalDistance = Math.sqrt(dx * dx + dy * dy);
+
+                // 2. Normalize it for your 125" scale regression
+                double distance = physicalDistance * (125.0 / 144.0);
 
                 if (distance >= 110) {
-                    // Original Far Range Math
+                    // Far Range Math (Now receiving the 125-scale input it expects)
                     double originalPos = -0.000000217243 * Math.pow(distance, 3)
                             + 0.0000386489 * Math.pow(distance, 2)
                             + 0.00297592 * distance
                             + 0.413722;
 
-                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
                     hoodServo.setPosition(originalPos - 0.4);
 
                     targetVelocity = (-0.0111536 * distance * distance
@@ -231,13 +261,12 @@ public class TurretPIDTest extends DbzOpMode {
                             - 1097.37524);
 
                 } else if (distance < 100) {
-                    // Original Close Range Math
+                    // Close Range Math
                     double originalPos = -5.81745e-7 * Math.pow(distance, 3)
                             + 0.0000705013 * Math.pow(distance, 2)
                             + 0.00433215 * distance
                             + 0.212657;
 
-                    // Shifting the 0.7 start down to 0.3
                     hoodServo.setPosition(originalPos - 0.4);
 
                     targetVelocity = (-0.0590251 * Math.pow(distance, 2)
@@ -249,7 +278,6 @@ public class TurretPIDTest extends DbzOpMode {
                 targetVelocity = 0;
             }
         }
-
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
@@ -259,6 +287,33 @@ public class TurretPIDTest extends DbzOpMode {
         updateVelocity();
         shoot();
         activeIntake();
+
+        if (dbzGamepad1.x) {
+            follower.setPose(new Pose(0, 0, Math.toRadians(180)));
+        }
+
+        if (gamepad2.dpad_up && !lastUp2) {
+            targetY += 1.0;
+        }
+        lastUp2 = gamepad2.dpad_up;
+
+        if (gamepad2.dpad_down && !lastDown2) {
+            targetY -= 1.0;
+        }
+        lastDown2 = gamepad2.dpad_down;
+
+
+        if (gamepad2.dpad_right && !lastRight2) {
+            targetX += 1.0;
+        }
+        lastRight2 = gamepad2.dpad_right;
+
+        if (gamepad2.dpad_left && !lastLeft2) {
+            targetX -= 1.0;
+        }
+        lastLeft2 = gamepad2.dpad_left;
+
+
 
         follower.update();
         aim();
@@ -302,10 +357,6 @@ public class TurretPIDTest extends DbzOpMode {
     private void addDebugTelemetry() {
         Pose pose = follower.getPose();
 
-        sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
-        sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-
-        light = hardwareMap.get(Servo.class, "light");
 
         // TARGET INFORMATION
         telemetryM.addData("=== TARGET ===", "");
@@ -397,6 +448,7 @@ public class TurretPIDTest extends DbzOpMode {
             rightpushServo.setPosition(rightPushIdle);
             holdServo.setPosition(holdClosePos);
 
+
             shooting = false;
         }
 
@@ -428,6 +480,7 @@ public class TurretPIDTest extends DbzOpMode {
             rightpushServo.setPosition(rightPushIdle);
         } else {
             intakeMotor.setPower(0);
+
             leftpushServo.setPosition(leftPushIdle);
             rightpushServo.setPosition(rightPushIdle);
         }
@@ -445,6 +498,8 @@ public class TurretPIDTest extends DbzOpMode {
         leftTriggerLast = leftTriggerPressed;
 
         double targetAngleDeg;
+
+
 
         if (!aimingActive) {
             turretState = TurretState.NORMAL;
