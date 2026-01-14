@@ -15,6 +15,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -38,8 +39,13 @@ public class blueside extends DbzOpMode {
 
     public static double targetVelocity = -500;
     public static double vkP = 4.8;
-    public static double vkF = 1.25;
+    public static double vkF = 1.26;
 
+    public static double servooffset = 0.023;
+    public static double Push0 = 0.06;
+    public static double Push1 = 0.4;
+    public static double Push2 = 0.6;
+    public static double Push3 = 0.66;
 
     public static double shotLeadTime = 0.8;
 
@@ -50,7 +56,7 @@ public class blueside extends DbzOpMode {
 
     public static double TV = -1400;
 
-    public static double threshold = 130;
+    public static double threshold = 160;
     public static double offsetDistance = 110.0;
     public static double offsetAngle = 0;
 
@@ -58,13 +64,13 @@ public class blueside extends DbzOpMode {
 
     public static double leftPushShoot = 0.66;
     public static double rightPushShoot = 0.69;
+//
+//    public static double leftPushIdle = 0.06;
+//    public static double rightPushIdle = 0.09;
 
-    public static double leftPushIdle = 0.06;
-    public static double rightPushIdle = 0.09;
-
-    public static double turretKp = 0.017;
+    public static double turretKp = 0.02;
     public static double turretKi = 0.0;
-    public static double turretKd = 0.001;
+    public static double turretKd = 0.004;
 
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 0.3;
@@ -158,8 +164,8 @@ public class blueside extends DbzOpMode {
 
         hoodServo.setPosition(hoodServoPos);
         holdServo.setPosition(holdClosePos);
-        leftpushServo.setPosition(leftPushIdle);
-        rightpushServo.setPosition(rightPushIdle);
+        leftpushServo.setPosition(Push0);
+        rightpushServo.setPosition(Push0-servooffset);
 
         intakeMotor = robot.intakeMotor;
         outtake1Motor = robot.outtake1Motor;
@@ -178,6 +184,16 @@ public class blueside extends DbzOpMode {
         turretPID.setTolerance(1.0);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+//
+//        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
 
         // TURRET MOTOR INITIALIZATION - FIXED
         turret = hardwareMap.get(DcMotorEx.class, DbzHardwareMap.Motor.turret.getName());
@@ -234,11 +250,11 @@ public class blueside extends DbzOpMode {
         if (detected1 || detected2) {
             light.setPosition(0.5);
             lighttimer.reset();// Example: Set to a specific color (e.g., Green or Yellow)
-        } else {
+        } else if (getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()>=2 || getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()<=2) {
             light.setPosition(0.0); // Off or Default color
         }
 
-        if(lighttimer.seconds()>3){
+        if(lighttimer.seconds()>1){
             lighttimer.reset();
         }
 //
@@ -361,6 +377,7 @@ public class blueside extends DbzOpMode {
         telemetryM.update(telemetry);
         telemetry.update();
     }
+    //green for all pids working purple for intake 3 balls
 
     private void updateVelocity() {
         Pose currentPose = follower.getPose();
@@ -469,19 +486,27 @@ public class blueside extends DbzOpMode {
         boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
         if (rightTriggerHeld && !shootLast && !shooting) {
             holdServo.setPosition(holdOpenPos);
-            leftpushServo.setPosition(leftPushShoot);
-            rightpushServo.setPosition(rightPushShoot);
+            leftpushServo.setPosition(Push1);
+            rightpushServo.setPosition(Push1-servooffset);
 
             intaketimer.reset();
             shooting = true;
         }
 
+        if (shooting && intaketimer.milliseconds() > 250) {
+            leftpushServo.setPosition(Push2);
+            rightpushServo.setPosition(Push2-servooffset);
+        }
+
+        if (shooting && intaketimer.milliseconds() > 500) {
+            leftpushServo.setPosition(Push3);
+            rightpushServo.setPosition(Push3-servooffset);
+        }
 
         if (shooting && intaketimer.milliseconds() > 1000) {
-            leftpushServo.setPosition(leftPushIdle);
-            rightpushServo.setPosition(rightPushIdle);
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0-servooffset);
             holdServo.setPosition(holdClosePos);
-
 
             shooting = false;
         }
@@ -506,17 +531,17 @@ public class blueside extends DbzOpMode {
 
         if (intakeForwardOn) {
             intakeMotor.setPower(1);
-            leftpushServo.setPosition(leftPushIdle);
-            rightpushServo.setPosition(rightPushIdle);
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0-servooffset);
         } else if (intakeReverseOn) {
             intakeMotor.setPower(-1);
-            leftpushServo.setPosition(leftPushIdle);
-            rightpushServo.setPosition(rightPushIdle);
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0-servooffset);
         } else {
             intakeMotor.setPower(0);
 
-            leftpushServo.setPosition(leftPushIdle);
-            rightpushServo.setPosition(rightPushIdle);
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0-servooffset);
         }
 
         lastLeftBumper = leftBumper;
@@ -644,8 +669,8 @@ public class blueside extends DbzOpMode {
         double vy = currentVelocity.getY();
 
         // Calculate future position
-        double futureX = pose.getX() + vx * shotLeadTime;
-        double futureY = pose.getY() + vy * shotLeadTime;
+        double futureX = pose.getX();
+        double futureY = pose.getY();
 
         double fieldAngle = Math.atan2(targetY - futureY, targetX - futureX);
         double turretAngleDeg = Math.toDegrees(fieldAngle - pose.getHeading());
