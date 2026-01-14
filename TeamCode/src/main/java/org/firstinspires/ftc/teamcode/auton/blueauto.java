@@ -44,9 +44,9 @@ public class blueauto extends DbzOpMode {
     public static double vkF = 1.25;
 
     public static double turretZeroDeg = 295;
-    public static double turretKp = 0.017;
+    public static double turretKp = 0.02;
     public static double turretKi = 0.0;
-    public static double turretKd = 0.001;
+    public static double turretKd = 0.004;
     public static double turretMaxPower = 0.30;
     public static double threshold = 175;
 
@@ -200,6 +200,7 @@ public class blueauto extends DbzOpMode {
 
 
     }
+
 
     @Override
     public void opLoop() {
