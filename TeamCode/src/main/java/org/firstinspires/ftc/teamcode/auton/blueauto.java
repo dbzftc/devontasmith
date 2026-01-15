@@ -41,10 +41,10 @@ public class blueauto extends DbzOpMode {
 
     public static double targetVelocity = -1500;
     public static double vkP = 4.8;
-    public static double vkF = 1.25;
+    public static double vkF = 1.08;
 
     public static double turretZeroDeg = 295;
-    public static double turretKp = 0.02;
+    public static double turretKp = 0.014;
     public static double turretKi = 0.0;
     public static double turretKd = 0.004;
     public static double turretMaxPower = 0.30;
@@ -53,7 +53,7 @@ public class blueauto extends DbzOpMode {
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double hoodServoPos = 0.48;
+    public static double hoodServoPos = 0.55;
 
     private Servo rightpushServo, leftpushServo, holdServo, hoodServo;
     private DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;

@@ -46,6 +46,13 @@ public class blueside extends DbzOpMode {
     public static double Push1 = 0.4;
     public static double Push2 = 0.6;
     public static double Push3 = 0.66;
+    public static double hoffsettime1 = 225;
+    public static double hoffsettime2 = 400;
+    public static double choffset1 = 0.02;
+    public static double choffset2 = 0.03;
+    public static double fhoffset1 = 0.00;
+    public static double fhoffset2 = 0.01;
+
 
     public static double shotLeadTime = 0.8;
 
@@ -57,8 +64,7 @@ public class blueside extends DbzOpMode {
     public static double TV = -1400;
 
     public static double threshold = 160;
-    public static double offsetDistance = 110.0;
-    public static double offsetAngle = 0;
+
 
     public static double turretZeroDeg =295;
 
@@ -127,6 +133,12 @@ public class blueside extends DbzOpMode {
     private boolean lastLeft2 = false;
     private boolean lastRight2 = false;
 
+    private double turretHeadingOffsetDeg = 0.0;
+    public static double turretoffset = 3.0;
+
+    private boolean lastr1 = false;
+    private boolean lastl1 = false;
+
 
     private enum TurretState {
         NORMAL,
@@ -142,7 +154,7 @@ public class blueside extends DbzOpMode {
     protected DistanceSensor sensor1, sensor2;
     protected Servo light;
 
-    public static double dthresh = 2.0;
+    public static double dthresh = 4.4;
 
     @Override
     public void opInit() {
@@ -231,6 +243,20 @@ public class blueside extends DbzOpMode {
         }
         lastAButton = aButton;
 
+        boolean rightStickPress = gamepad1.right_stick_button;
+        boolean leftStickPress  = gamepad1.left_stick_button;
+
+        if (rightStickPress && !lastr1) {
+            turretHeadingOffsetDeg -= turretoffset;
+        }
+
+        if (leftStickPress && !lastl1) {
+            turretHeadingOffsetDeg += turretoffset;
+        }
+
+        lastr1 = rightStickPress;
+        lastl1 = leftStickPress;
+
         Pose ppose = follower.getPose();
 
 
@@ -276,50 +302,56 @@ public class blueside extends DbzOpMode {
 //
 //        ShootLast = RightTriggerHeld;
 
-
-        if (autoHoodActive && !Shooting) {
+        if(autoHoodActive) {
             if (ppose != null) {
                 double dx = targetX - ppose.getX();
                 double dy = targetY - ppose.getY();
                 double distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance >= 115) {
-//                    // Original Far Range Math
-//                    double originalPos = -0.000000217243 * Math.pow(distance, 3)
-//                            + 0.0000386489 * Math.pow(distance, 2)
-//                            + 0.00297592 * distance
-//                            + 0.413722;
-//                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
-//                    hoodServo.setPosition(originalPos-0.4);
-//                    targetVelocity = (-0.0111536 * distance * distance
-//                            - 4.00719 * distance
-//                            - 1097.37524);
                     double originalPos = 0.000316354 * Math.pow(distance, 2)
-                            -0.0843748 * distance
-                            +6.1213;
-                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
-                    hoodServo.setPosition(originalPos);
+                            - 0.0843748 * distance
+                            + 6.1213;
                     targetVelocity = (0.0502566 * distance * distance
-                            -25.86373 * distance
-                            +886.53277);
+                            - 25.86373 * distance
+                            + 886.53277);
+                    if (!shooting) {
+                        hoodServo.setPosition(originalPos);
+                    } else {
+                        if (intaketimer.milliseconds() > hoffsettime2) {
+                            hoodServo.setPosition(originalPos - fhoffset2);
+                        } else if (intaketimer.milliseconds() > hoffsettime1) {
+                            hoodServo.setPosition(originalPos - fhoffset1);
+                        } else {
+                            hoodServo.setPosition(originalPos);
+                        }
+                    }
                 } else if (distance < 115) {
-                    // Original close Range Math
                     double originalPos = 0.00000326247 * Math.pow(distance, 3)
-                            -0.000953594 * Math.pow(distance, 2)
+                            - 0.000953594 * Math.pow(distance, 2)
                             + 0.0932128 * distance
-                            -2.53108;
-                    // Shifting the 0.7 start down to 0.3 (0.7 - 0.4 = 0.3)
-                    hoodServo.setPosition(originalPos);
+                            - 2.53108;
                     targetVelocity = (0.0381071 * distance * distance
-                            -11.86256 * distance
-                            -717.83856);
+                            - 11.86256 * distance
+                            - 717.83856);
+                    if (!shooting) {
+                        hoodServo.setPosition(originalPos);
+                    } else {
+                        if (intaketimer.milliseconds() > hoffsettime2) {
+                            hoodServo.setPosition(originalPos - choffset2);
+                        } else if (intaketimer.milliseconds() > hoffsettime1) {
+                            hoodServo.setPosition(originalPos - choffset1);
+                        } else {
+                            hoodServo.setPosition(originalPos);
+                        }
+                    }
                 }
-                //the two lines below are for regression
-//                targetVelocity = TV;
-//                hoodServo.setPosition(hoodServoPos);
             } else {
                 hoodServo.setPosition(hoodServoPos);
                 targetVelocity = 0;
             }
+        } else {
+            hoodServo.setPosition(hoodServoPos);
+            targetVelocity = 0;
         }
 
         follower.setTeleOpDrive(
@@ -334,9 +366,11 @@ public class blueside extends DbzOpMode {
 
         if (dbzGamepad1.x) {
             follower.setPose(new Pose(8, 8.5, Math.toRadians(180)));
+            turretHeadingOffsetDeg = 0.0;
         }
         if (dbzGamepad1.y){
             follower.setPose(new Pose(132, 8.5, Math.toRadians(0)));
+            turretHeadingOffsetDeg = 0.0;
         }
 
         if (gamepad2.dpad_up && !lastUp2) {
@@ -409,6 +443,7 @@ public class blueside extends DbzOpMode {
 
 
         // TARGET INFORMATION
+        telemetryM.addData("shooting: ", shooting);
         telemetryM.addData("=== TARGET ===", "");
         telemetryM.addData("Target X", String.format("%.2f", targetX));
         telemetryM.addData("Target Y", String.format("%.2f", targetY));
@@ -674,6 +709,8 @@ public class blueside extends DbzOpMode {
 
         double fieldAngle = Math.atan2(targetY - futureY, targetX - futureX);
         double turretAngleDeg = Math.toDegrees(fieldAngle - pose.getHeading());
+
+        turretAngleDeg += turretHeadingOffsetDeg;
 
         return angleWrap(turretAngleDeg);
     }
