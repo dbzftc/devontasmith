@@ -32,7 +32,23 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 @TeleOp(name = "blueside")
 public class blueside extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
-    private ElapsedTime lighttimer = new ElapsedTime();
+    private ElapsedTime threeBallTimer = new ElapsedTime();
+    private ElapsedTime pushDelayTimer = new ElapsedTime();
+
+    public static double threeBallHoldTime = 0.15;   // seconds (continuous detect)
+    public static double holdToPushDelay  = 0.25;  // seconds (hold → push)
+    private boolean atTTarget = false;
+    private boolean atWTarget = false;
+
+    private boolean threeBallsLocked = false;
+    private boolean holdOpened = false;
+
+    public static final double LIGHT_GREEN  = 0.5;
+    public static final double LIGHT_PURPLE = 0.722;
+    public static final double LIGHT_OFF    = 0.0;
+
+    private double lastLightPos = -1;
+    private double lastLight2Pos = -1;
 
     public static double targetX = 0;
     public static double targetY = 144;
@@ -46,6 +62,7 @@ public class blueside extends DbzOpMode {
     public static double Push1 = 0.4;
     public static double Push2 = 0.6;
     public static double Push3 = 0.66;
+    public static double lock = 0.15;
     public static double hoffsettime1 = 225;
     public static double hoffsettime2 = 400;
     public static double choffset1 = 0.02;
@@ -152,7 +169,7 @@ public class blueside extends DbzOpMode {
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
     protected DistanceSensor sensor1, sensor2;
-    protected Servo light;
+    protected Servo light, light2;
 
     public static double dthresh = 4.4;
 
@@ -171,6 +188,7 @@ public class blueside extends DbzOpMode {
 
         // If 'light' is also throwing errors, initialize it here too:
         light = hardwareMap.get(Servo.class, "light");
+        light2 = hardwareMap.get(Servo.class, "light2");
 
 
 
@@ -243,8 +261,8 @@ public class blueside extends DbzOpMode {
         }
         lastAButton = aButton;
 
-        boolean rightStickPress = gamepad1.right_stick_button;
-        boolean leftStickPress  = gamepad1.left_stick_button;
+        boolean rightStickPress = gamepad2.right_stick_button;
+        boolean leftStickPress  = gamepad2.left_stick_button;
 
         if (rightStickPress && !lastr1) {
             turretHeadingOffsetDeg -= turretoffset;
@@ -260,29 +278,25 @@ public class blueside extends DbzOpMode {
         Pose ppose = follower.getPose();
 
 
-        double dist1 = sensor1.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
-        double dist2 = sensor2.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
-
-
-        boolean detected1 = dist1 < dthresh;
-        boolean detected2 = dist2 < dthresh;
-
-        telemetryM.addData("=== PROXIMITY SENSORS ===", "");
-        telemetryM.addData("Sensor 1 (cm)", String.format("%.2f", dist1));
-        telemetryM.addData("Sensor 1 Detected", detected1 ? "YES" : "NO");
-        telemetryM.addData("Sensor 2 (cm)", String.format("%.2f", dist2));
-        telemetryM.addData("Sensor 2 Detected", detected2 ? "YES" : "NO");
-
-        if (detected1 || detected2) {
-            light.setPosition(0.5);
-            lighttimer.reset();// Example: Set to a specific color (e.g., Green or Yellow)
-        } else if (getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()>=2 || getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()<=2) {
-            light.setPosition(0.0); // Off or Default color
-        }
-
-        if(lighttimer.seconds()>1){
-            lighttimer.reset();
-        }
+//
+//
+//
+//        telemetryM.addData("=== PROXIMITY SENSORS ===", "");
+//        telemetryM.addData("Sensor 1 (cm)", String.format("%.2f", dist1));
+//        telemetryM.addData("Sensor 1 Detected", detected1 ? "YES" : "NO");
+//        telemetryM.addData("Sensor 2 (cm)", String.format("%.2f", dist2));
+//        telemetryM.addData("Sensor 2 Detected", detected2 ? "YES" : "NO");
+//
+//        if (detected1 || detected2) {
+//            light.setPosition(0.5);
+//            lighttimer.reset();// Example: Set to a specific color (e.g., Green or Yellow)
+//        } else if (getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()>=2 || getDesiredTurretAngleDeg()-getDesiredTurretAngleDeg()<=2) {
+//            light.setPosition(0.0); // Off or Default color
+//        }
+//
+//        if(lighttimer.seconds()>1){
+//            lighttimer.reset();
+//        }
 //
 //        boolean RightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
 //
@@ -360,6 +374,8 @@ public class blueside extends DbzOpMode {
                 -gamepad1.right_stick_x,
                 true
         );
+        updateLights();
+        checkThreeBallsAndLock();
         updateVelocity();
         shoot();
         activeIntake();
@@ -398,7 +414,6 @@ public class blueside extends DbzOpMode {
 
         follower.update();
         aim();
-
         runFlywheelVelocityControl();
 
         if (follower.getCurrentPath() != null) {
@@ -412,6 +427,110 @@ public class blueside extends DbzOpMode {
         telemetry.update();
     }
     //green for all pids working purple for intake 3 balls
+
+    private void checkThreeBallsAndLock() {
+        double dist1 = sensor1.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
+        double dist2 = sensor2.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
+        boolean detected1 = dist1 < dthresh;
+        boolean detected2 = dist2 < dthresh;
+        boolean ballDetected = detected1 || detected2;
+
+        if (!ballDetected) {
+            threeBallTimer.reset();
+//            pushDelayTimer.reset();
+            threeBallsLocked = false;
+            holdOpened = false;
+            return;
+        }
+
+        if (threeBallTimer.seconds() < threeBallHoldTime) {
+            return;
+        }
+
+        if (!holdOpened) {
+            holdServo.setPosition(holdOpenPos);
+            pushDelayTimer.reset();
+            holdOpened = true;
+            return;
+        }
+
+        if (!threeBallsLocked && pushDelayTimer.seconds() > holdToPushDelay) {
+            leftpushServo.setPosition(lock);
+            rightpushServo.setPosition(lock - servooffset);
+
+            intakeMotor.setPower(0);
+            intakeForwardOn = false;
+            intakeReverseOn = false;
+
+            threeBallsLocked = true;
+        }
+    }
+
+    private void resetAfterShooting() {
+        threeBallsLocked = false;
+        holdOpened = false;
+
+        holdServo.setPosition(holdClosePos);
+        leftpushServo.setPosition(Push0);
+        rightpushServo.setPosition(Push0 - servooffset);
+
+        intakeForwardOn = true;
+        intakeReverseOn = false;
+        intakeMotor.setPower(-1);
+    }
+
+    private void updateLights() {
+        if (light == null || light2 == null) return;
+
+        double newPos;
+
+        // Both flywheel and turret at target → green
+        if (atTTarget && atWTarget) {
+            newPos = 0.5;  // green
+        }
+        // Intake has 3 balls → purple
+        else if (threeBallsLocked) {
+            newPos = 0.722; // purple
+        }
+        // Default / safe color → off
+        else {
+            newPos = 0.0; // off
+        }
+
+        // Only allow valid values
+        if (newPos != 0.0 && newPos != 0.5 && newPos != 0.722) {
+            newPos = 0.0; // force off if invalid
+        }
+
+        // Round to avoid tiny servo fluctuations
+        newPos = Math.round(newPos * 1000.0) / 1000.0;
+
+        // Only update if changed
+        if (Math.abs(lastLightPos - newPos) > 0.001) {
+            light.setPosition(newPos);
+            lastLightPos = newPos;
+        }
+
+        if (Math.abs(lastLight2Pos - newPos) > 0.001) {
+            light2.setPosition(newPos);
+            lastLight2Pos = newPos;
+        }
+    }
+
+//    private void setLightSafe(Servo s, double pos, boolean isLight2) {
+//        if (s == null) return;
+//        if (isLight2) {
+//            if (pos != lastLight2Pos) {
+//                s.setPosition(pos);
+//                lastLight2Pos = pos;
+//            }
+//        } else {
+//            if (pos != lastLightPos) {
+//                s.setPosition(pos);
+//                lastLightPos = pos;
+//            }
+//        }
+//    }
 
     private void updateVelocity() {
         Pose currentPose = follower.getPose();
@@ -533,7 +652,7 @@ public class blueside extends DbzOpMode {
             rightpushServo.setPosition(Push2-servooffset);
         }
 
-        if (shooting && intaketimer.milliseconds() > 500) {
+        if (shooting && intaketimer.milliseconds() > 440) {
             leftpushServo.setPosition(Push3);
             rightpushServo.setPosition(Push3-servooffset);
         }
@@ -544,43 +663,44 @@ public class blueside extends DbzOpMode {
             holdServo.setPosition(holdClosePos);
 
             shooting = false;
+            resetAfterShooting();
         }
-
         shootLast = rightTriggerHeld;
     }
 
     private void activeIntake() {
-        boolean leftBumper = gamepad1.left_bumper;
-        boolean rightBumper = gamepad1.right_bumper;
+        boolean rb = gamepad1.right_bumper;
+        boolean lb = gamepad1.left_bumper;
 
-        if (shooting) return;
+        if (shooting || threeBallsLocked) {
+            intakeMotor.setPower(0);
+            return;
+        }
 
-        if (leftBumper && !lastLeftBumper) {
+        if (rb && !lastLeftBumper) {
             intakeForwardOn = !intakeForwardOn;
             intakeReverseOn = false;
         }
-        if (rightBumper && !lastRightBumper) {
+
+        if (lb && !lastRightBumper) {
             intakeReverseOn = !intakeReverseOn;
             intakeForwardOn = false;
         }
 
         if (intakeForwardOn) {
-            intakeMotor.setPower(1);
-            leftpushServo.setPosition(Push0);
-            rightpushServo.setPosition(Push0-servooffset);
-        } else if (intakeReverseOn) {
             intakeMotor.setPower(-1);
-            leftpushServo.setPosition(Push0);
-            rightpushServo.setPosition(Push0-servooffset);
+        } else if (intakeReverseOn) {
+            intakeMotor.setPower(1);
         } else {
             intakeMotor.setPower(0);
-
-            leftpushServo.setPosition(Push0);
-            rightpushServo.setPosition(Push0-servooffset);
         }
 
-        lastLeftBumper = leftBumper;
-        lastRightBumper = rightBumper;
+        if (!threeBallsLocked && !shooting) {
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0 - servooffset);
+        }
+        lastLeftBumper = lb;
+        lastRightBumper = rb;
     }
 
     private void aim() {
@@ -627,6 +747,7 @@ public class blueside extends DbzOpMode {
 
         double currentAngleDeg = getTurretAngleDeg();
         double errorDeg = angleWrap(targetAngleDeg - currentAngleDeg);
+        atTTarget = Math.abs(errorDeg) < 2;
 
         if (Math.abs(errorDeg) <= turretDeadbandDeg) {
             turret.setPower(0);
@@ -682,6 +803,7 @@ public class blueside extends DbzOpMode {
         outtake1Motor.setPower(power);
         outtake2Motor.setPower(power);
 
+        atWTarget = Math.abs(targetVelocity - currentVelocity) < 40;
         // --- ADD TELEMETRY FOR GRAPHING ---
         // Dashboard will graph any numerical value.
         // Sending them like this makes them easy to find.

@@ -109,26 +109,26 @@ public class blueauto extends DbzOpMode {
             Path4 = follower.pathBuilder().addPath(
                     new BezierCurve(new Pose(59.244, 84.166),
                             new Pose(34.717, 49.164),
-                            new Pose(12.938, 62.7))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(155)).build();
+                            new Pose(14.938, 61.7))
+            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140)).build();
 
             Path5 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(12.938, 62.7),
+                    new BezierCurve(new Pose(14.938, 61.7),
                             new Pose(34.717, 49.164),
                             new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(180)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180)).build();
 
             Path6 = follower.pathBuilder().addPath(
                     new BezierCurve(new Pose(59.244, 84.166),
                             new Pose(34.717, 49.164),
-                            new Pose(12.938, 62.7))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(155)).build();
+                            new Pose(14.938, 61.7))
+            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140)).build();
 
             Path7 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(12.938, 62.7),
+                    new BezierCurve(new Pose(14.938, 61.7),
                             new Pose(34.717, 49.164),
                             new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(180)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180)).build();
 
             Path8 = follower.pathBuilder().addPath(
                     new BezierLine(new Pose(59.244, 84.166),
