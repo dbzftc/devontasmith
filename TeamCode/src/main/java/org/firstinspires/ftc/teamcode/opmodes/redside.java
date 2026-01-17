@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
+import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -15,9 +15,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -29,8 +27,8 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 
 @Config
-@TeleOp(name = "blueside")
-public class blueside extends DbzOpMode {
+@TeleOp(name = "redside")
+public class redside extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
     private ElapsedTime threeBallTimer = new ElapsedTime();
     private ElapsedTime pushDelayTimer = new ElapsedTime();
@@ -50,7 +48,7 @@ public class blueside extends DbzOpMode {
     private double lastLightPos = -1;
     private double lastLight2Pos = -1;
 
-    public static double targetX = 0;
+    public static double targetX = 144;
     public static double targetY = 144;
 
     public static double targetVelocity = -500;
@@ -63,18 +61,12 @@ public class blueside extends DbzOpMode {
     public static double Push2 = 0.6;
     public static double Push3 = 0.66;
     public static double lock = 0.15;
-    public static double shot1 = 250;
-    public static double shot2 = 500;
-    public static double shotreturn = 750;
-    public static double hoffsettime1 = shot1-100;
-    public static double hoffsettime2 = shot2-100;
-    public static double choffset1 = 0.0;
-    //0.02
-    public static double choffset2 = 0.0;
-    //0.03
+    public static double hoffsettime1 = 440;
+    public static double hoffsettime2 = 940;
+    public static double choffset1 = 0.02;
+    public static double choffset2 = 0.03;
     public static double fhoffset1 = 0.00;
-    public static double fhoffset2 = 0.0;
-    //0.01
+    public static double fhoffset2 = 0.01;
 
 
     public static double shotLeadTime = 0.8;
@@ -86,8 +78,7 @@ public class blueside extends DbzOpMode {
 
     public static double TV = -1400;
 
-    public static double threshold = 90;
-    public static double threshold2 = 160;
+    public static double threshold = 160;
 
 
     public static double turretZeroDeg =295;
@@ -100,13 +91,10 @@ public class blueside extends DbzOpMode {
 
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
-    public static double turretKd = 0.002;
+    public static double turretKd = 0.004;
 
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 1;
-
-
-
 
 
     public static double turretKs = 0.0; // SET TO 0 AS REQUESTED
@@ -141,7 +129,7 @@ public class blueside extends DbzOpMode {
     private boolean hoodOffsetActive = false;
 
 
-    private boolean autoHoodActive = true;
+    private boolean autoHoodActive = false;
     private boolean lastAButton = false;
 
     private boolean aimingActive = false;
@@ -248,7 +236,7 @@ public class blueside extends DbzOpMode {
         //follower = Constants.createFollower(hardwareMap);
 
 
-        follower.setStartingPose(org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose);
+        follower.setStartingPose(PoseCache.lastPose);
 
         PanelsConfigurables.INSTANCE.refreshClass(this);
         follower.update();
@@ -271,8 +259,8 @@ public class blueside extends DbzOpMode {
         }
         lastAButton = aButton;
 
-        boolean rightStickPress = gamepad2.right_stick_button || gamepad1.right_stick_button;
-        boolean leftStickPress  = gamepad2.left_stick_button || gamepad1.left_stick_button;
+        boolean rightStickPress = gamepad2.right_stick_button;
+        boolean leftStickPress  = gamepad2.left_stick_button;
 
         if (rightStickPress && !lastr1) {
             turretHeadingOffsetDeg -= turretoffset;
@@ -480,6 +468,7 @@ public class blueside extends DbzOpMode {
         holdServo.setPosition(holdClosePos);
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
+
         intakeForwardOn = true;
         intakeReverseOn = false;
         intakeMotor.setPower(-1);
@@ -489,8 +478,13 @@ public class blueside extends DbzOpMode {
         if (light == null || light2 == null) return;
 
         double newPos;
+
+        // Both flywheel and turret at target → green
+        if (atTTarget && atWTarget) {
+            newPos = 0.5;  // green
+        }
         // Intake has 3 balls → purple
-        if (threeBallsLocked) {
+        else if (threeBallsLocked) {
             newPos = 0.722; // purple
         }
         // Default / safe color → off
@@ -499,7 +493,7 @@ public class blueside extends DbzOpMode {
         }
 
         // Only allow valid values
-        if (newPos != 0.0 && newPos != 0.722) {
+        if (newPos != 0.0 && newPos != 0.5 && newPos != 0.722) {
             newPos = 0.0; // force off if invalid
         }
 
@@ -560,6 +554,8 @@ public class blueside extends DbzOpMode {
 
     private void addDebugTelemetry() {
         Pose pose = follower.getPose();
+
+
         // TARGET INFORMATION
         telemetryM.addData("shooting: ", shooting);
         telemetryM.addData("=== TARGET ===", "");
@@ -637,59 +633,35 @@ public class blueside extends DbzOpMode {
 
     private void shoot() {
         boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
-        boolean dpad_down = dbzGamepad1.dpad_down;
-        if (!dpad_down) {
-            if (rightTriggerHeld && !shootLast && !shooting) {
-                holdServo.setPosition(holdOpenPos);
-                leftpushServo.setPosition(Push1);
-                rightpushServo.setPosition(Push1 - servooffset);
+        if (rightTriggerHeld && !shootLast && !shooting) {
+            holdServo.setPosition(holdOpenPos);
+            leftpushServo.setPosition(Push1);
+            rightpushServo.setPosition(Push1-servooffset);
 
-                intaketimer.reset();
-                shooting = true;
-            }
-
-            if (shooting && intaketimer.milliseconds() > shotreturn) {
-                leftpushServo.setPosition(Push0);
-                rightpushServo.setPosition(Push0 - servooffset);
-                holdServo.setPosition(holdClosePos);
-
-                shooting = false;
-                resetAfterShooting();
-            }
-
-            else if (shooting && intaketimer.milliseconds() > shot2) {
-                leftpushServo.setPosition(Push3);
-                rightpushServo.setPosition(Push3 - servooffset);
-            }
-
-            else if (shooting && intaketimer.milliseconds() > shot1) {
-                leftpushServo.setPosition(Push2);
-                rightpushServo.setPosition(Push2 - servooffset);
-            }
-
+            intaketimer.reset();
+            shooting = true;
         }
-        else {
-            if (rightTriggerHeld && !shootLast && !shooting) {
-                holdServo.setPosition(holdOpenPos);
-                leftpushServo.setPosition(Push3);
-                rightpushServo.setPosition(Push3 - servooffset);
 
-                intaketimer.reset();
-                shooting = true;
-            }
-            if (shooting && intaketimer.milliseconds() > 700) {
-                leftpushServo.setPosition(Push0);
-                rightpushServo.setPosition(Push0 - servooffset);
-                holdServo.setPosition(holdClosePos);
-                shooting = false;
-                resetAfterShooting();
-            }
+        if (shooting && intaketimer.milliseconds() > 500) {
+            leftpushServo.setPosition(Push2);
+            rightpushServo.setPosition(Push2-servooffset);
+        }
+
+        if (shooting && intaketimer.milliseconds() > 100) {
+            leftpushServo.setPosition(Push3);
+            rightpushServo.setPosition(Push3-servooffset);
+        }
+
+        if (shooting && intaketimer.milliseconds() > 500) {
+            leftpushServo.setPosition(Push0);
+            rightpushServo.setPosition(Push0-servooffset);
+            holdServo.setPosition(holdClosePos);
+
+            shooting = false;
+            resetAfterShooting();
         }
         shootLast = rightTriggerHeld;
-        telemetryM.addData("slow shooting: ", !dpad_down);
-        telemetryM.addData("fast shooting: ", dpad_down);
     }
-
 
     private void activeIntake() {
         boolean rb = gamepad1.right_bumper;
@@ -697,18 +669,15 @@ public class blueside extends DbzOpMode {
 
         if (shooting || threeBallsLocked) {
             intakeMotor.setPower(0);
-            // Still update the last states so edges are clean after shooting
-            lastRightBumper = rb;
-            lastLeftBumper = lb;
             return;
         }
 
-        if (rb && !lastRightBumper) {
+        if (rb && !lastLeftBumper) {
             intakeForwardOn = !intakeForwardOn;
             intakeReverseOn = false;
         }
 
-        if (lb && !lastLeftBumper) {
+        if (lb && !lastRightBumper) {
             intakeReverseOn = !intakeReverseOn;
             intakeForwardOn = false;
         }
@@ -725,11 +694,9 @@ public class blueside extends DbzOpMode {
             leftpushServo.setPosition(Push0);
             rightpushServo.setPosition(Push0 - servooffset);
         }
-
-        lastRightBumper = rb;
         lastLeftBumper = lb;
+        lastRightBumper = rb;
     }
-
 
     private void aim() {
         boolean leftTriggerPressed = dbzGamepad1.left_trigger > 0.1;
@@ -868,12 +835,8 @@ public class blueside extends DbzOpMode {
 
     private double overshoot() {
         double desired = angleWrap(getDesiredTurretAngleDeg());
-        if (desired > threshold2) {
-            return threshold2;
-        }
-        if (desired < -threshold) {
-            return -threshold;
-        }
+        if (desired > threshold) return threshold;
+        if (desired < -threshold) return -threshold;
         return desired;
     }
 

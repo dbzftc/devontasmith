@@ -20,15 +20,15 @@ import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 @Config
-@Autonomous(name = "blueauto", group = "Autonomous")
-public class blueauto extends DbzOpMode {
+@Autonomous(name = "redauto", group = "Autonomous")
+public class redauto extends DbzOpMode {
 
-    public static double startX = 15.819757365684577;
-    public static double startY = 113;
-    public static double startHeadingDeg = 90;
+    public static double startX = 109.336;
+    public static double startY = 8.273;
+    public static double startHeadingDeg = -90;
 
     public static double targetX = 0.0;
-    public static double targetY = 144.0;
+    public static double targetY = 0.0;
 
     public static double holdOpenPos = 0.2;
     public static double holdClosePos = 0.1;
@@ -44,14 +44,11 @@ public class blueauto extends DbzOpMode {
     public static double vkF = 1.08;
 
     public static double turretZeroDeg = 295;
-    public static double turretKp = 0.02;
+    public static double turretKp = 0.014;
     public static double turretKi = 0.0;
-    public static double turretKd = 0.002;
-    public static double turretMaxPower = 1;
-    public static double threshold = 150;
-
-    public static double turretPivotForwardIn = 0.0;
-    public static double turretPivotLeftIn = 0.0;
+    public static double turretKd = 0.004;
+    public static double turretMaxPower = 0.30;
+    public static double threshold = 175;
 
     public static double hoodServoPos = 0.55;
 
@@ -70,15 +67,12 @@ public class blueauto extends DbzOpMode {
     private double waitms = 0;
 
     private static final double waitShoot = 1000;
-
     private static final double waitShoot1 = 1500;
     public static TelemetryManager telemetryM;
     protected DistanceSensor sensor1, sensor2;
     protected Servo light;
 
     public static double dthresh = 2.0;
-
-
 
     private static final double waitGate  = 2000;
     private static final double waitTiny  = 100;
@@ -90,72 +84,72 @@ public class blueauto extends DbzOpMode {
 
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(15.819757365684577, 113),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180)).build();
+                    new BezierLine(new Pose(109.336, 8.273),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(-180)).build();
 
             Path2 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(59.244, 84.166),
-                            new Pose(68.907, 57.651),
-                            new Pose(22.406, 59.627))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(59.244, 59.834),
+                            new Pose(68.907, 86.349),
+                            new Pose(22.406, 84.373))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path3 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(22.406, 59.627),
-                            new Pose(68.907, 57.651),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(22.406, 84.373),
+                            new Pose(68.907, 86.349),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path4 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(59.244, 84.166),
-                            new Pose(34.717, 49.164),
-                            new Pose(12.938, 61.7))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140)).build();
+                    new BezierCurve(new Pose(59.244, 59.834),
+                            new Pose(34.717, 94.836),
+                            new Pose(14.938, 82.3))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-140)).build();
 
             Path5 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(12.938, 61.7),
-                            new Pose(34.717, 49.164),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(14.938, 82.3),
+                            new Pose(34.717, 94.836),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-140), Math.toRadians(-180)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(59.244, 84.166),
-                            new Pose(34.717, 49.164),
-                            new Pose(12.938, 61.7))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140)).build();
+                    new BezierCurve(new Pose(59.244, 59.834),
+                            new Pose(34.717, 94.836),
+                            new Pose(14.938, 82.3))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-140)).build();
 
             Path7 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(12.938, 61.7),
-                            new Pose(34.717, 49.164),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(14.938, 82.3),
+                            new Pose(34.717, 94.836),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-140), Math.toRadians(-180)).build();
 
             Path8 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(59.244, 84.166),
-                            new Pose(20.582, 84.273))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierLine(new Pose(59.244, 59.834),
+                            new Pose(20.582, 59.727))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(20.582, 84.273),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierLine(new Pose(20.582, 59.727),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path10 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(59.244, 84.166),
-                            new Pose(64.049, 33.420),
-                            new Pose(20.611, 35.479))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(59.244, 59.834),
+                            new Pose(64.049, 110.58),
+                            new Pose(20.611, 108.521))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path11 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(20.611, 35.479),
-                            new Pose(64.049, 33.181),
-                            new Pose(59.244, 84.166))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierCurve(new Pose(20.611, 108.521),
+                            new Pose(64.049, 110.819),
+                            new Pose(59.244, 59.834))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
 
             Path12 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(59.244, 84.166),
-                            new Pose(58.985, 104.514))
-            ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
+                    new BezierLine(new Pose(59.244, 59.834),
+                            new Pose(58.985, 39.486))
+            ).setLinearHeadingInterpolation(Math.toRadians(-180), Math.toRadians(-180)).build();
         }
     }
 
@@ -167,8 +161,6 @@ public class blueauto extends DbzOpMode {
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
         sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-
-        // If 'light' is also throwing errors, initialize it here too:
         light = hardwareMap.get(Servo.class, "light");
 
         intakeMotor = robot.intakeMotor;
@@ -196,11 +188,7 @@ public class blueauto extends DbzOpMode {
         leftpushServo.setPosition(leftPushIdle);
         rightpushServo.setPosition(rightPushIdle);
         hoodServo.setPosition(hoodServoPos);
-
-
-
     }
-
 
     @Override
     public void opLoop() {
@@ -210,24 +198,17 @@ public class blueauto extends DbzOpMode {
         runFlywheelVelocityControl();
         runTurretAlwaysOn();
 
-
-
-
         double dist1 = sensor1.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
         double dist2 = sensor2.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
-
 
         boolean detected1 = dist1 < dthresh;
         boolean detected2 = dist2 < dthresh;
 
-
-
         if (detected1 || detected2) {
-            light.setPosition(0.5); // Example: Set to a specific color (e.g., Green or Yellow)
+            light.setPosition(0.5);
         } else {
-            light.setPosition(0.0); // Off or Default color
+            light.setPosition(0.0);
         }
-
 
         holdServo.setPosition(holdOpenPos);
         leftpushServo.setPosition(shooting ? leftPushShoot : leftPushIdle);
@@ -239,14 +220,11 @@ public class blueauto extends DbzOpMode {
                 state = 1;
                 break;
             case 1:
-                // When Path 1 finishes, wait 500ms WITHOUT shooting (servos stay idle)
                 if (!follower.isBusy()) {
-                    beginWait(500, false, 21); // Using 21 as a temporary state for 1.5
+                    beginWait(500, false, 21);
                 }
                 break;
-
-            case 21: // Effectively State 1.5
-                // After 500ms is up, start the actual shooting (servos push) for the remainder
+            case 21:
                 if (waitDone()) {
                     beginWait(waitShoot1, true, 2);
                 }
@@ -304,7 +282,6 @@ public class blueauto extends DbzOpMode {
                 }
                 break;
             case 12:
-                // New Wait added after Path 7
                 if (!follower.isBusy()) beginWait(waitShoot, true, 13);
                 break;
             case 13:
@@ -352,18 +329,10 @@ public class blueauto extends DbzOpMode {
         boolean active = state < 25;
         if (!active) {
             targetVelocity = -500;
-            hoodServo.setPosition(hoodServoPos);
             return;
         }
         Pose pose = follower.getPose();
-        if (pose == null) {
-            targetVelocity = -500;
-            hoodServo.setPosition(hoodServoPos);
-            return;
-        }
-        double dx = targetX - pose.getX();
-        double dy = targetY - pose.getY();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        if (pose == null) return;
     }
 
     private void beginWait(double ms, boolean doshoot, int nextState) {
@@ -426,7 +395,5 @@ public class blueauto extends DbzOpMode {
     @Override public void opLoopHook() {}
     @Override public void opTeardown() {
         org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose = follower.getPose();
-
-        }
-
+    }
 }
