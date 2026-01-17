@@ -15,7 +15,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -29,8 +28,8 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 
 @Config
-@TeleOp(name = "blueside")
-public class blueside extends DbzOpMode {
+@TeleOp(name = "_redside")
+public class _redside extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
     private ElapsedTime threeBallTimer = new ElapsedTime();
     private ElapsedTime pushDelayTimer = new ElapsedTime();
@@ -50,7 +49,7 @@ public class blueside extends DbzOpMode {
     private double lastLightPos = -1;
     private double lastLight2Pos = -1;
 
-    public static double targetX = 0;
+    public static double targetX = 144;
     public static double targetY = 144;
 
     public static double targetVelocity = -500;
@@ -101,12 +100,8 @@ public class blueside extends DbzOpMode {
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
     public static double turretKd = 0.002;
-
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 1;
-
-
-
 
 
     public static double turretKs = 0.0; // SET TO 0 AS REQUESTED
@@ -115,7 +110,7 @@ public class blueside extends DbzOpMode {
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double startX = 8;
+    public static double startX = 136;
     public static double startY = 8.5;
     public static double startHeadingDeg = 0.0;
     // Add these with your other variables
@@ -395,7 +390,7 @@ public class blueside extends DbzOpMode {
             turretHeadingOffsetDeg = 0.0;
         }
         if (dbzGamepad1.y){
-            follower.setPose(new Pose(132, 8.5, Math.toRadians(0)));
+            follower.setPose(new Pose(136, 8.5, Math.toRadians(0)));
             turretHeadingOffsetDeg = 0.0;
         }
 
