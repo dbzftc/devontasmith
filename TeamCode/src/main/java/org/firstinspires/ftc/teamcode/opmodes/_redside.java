@@ -33,19 +33,14 @@ public class _redside extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
     private ElapsedTime threeBallTimer = new ElapsedTime();
     private ElapsedTime pushDelayTimer = new ElapsedTime();
-    private ElapsedTime reverseAfterLockTimer = new ElapsedTime();
 
     public static double threeBallHoldTime = 0.01;
     public static double holdToPushDelay  = 0.25;
-
-    public static double reverseAfterLockDuration = 1.0;
     private boolean atTTarget = false;
     private boolean atWTarget = false;
 
     private boolean threeBallsLocked = false;
     private boolean holdOpened = false;
-    private boolean reverseAfterLockActive = false;
-
     public static final double LIGHT_GREEN  = 0.5;
     public static final double LIGHT_PURPLE = 0.722;
     public static final double LIGHT_OFF    = 0.0;
@@ -77,8 +72,6 @@ public class _redside extends DbzOpMode {
     public static double fhoffset2 = 0.0;
 
     public static double dtoffset = 2.0;
-
-    private static double holdLeadTime = 200;
 
     public static double shotLeadTime = 0.62;
 
@@ -453,9 +446,6 @@ public class _redside extends DbzOpMode {
             holdServo.setPosition(holdClosePos);
 
             threeBallsLocked = true;
-
-            reverseAfterLockActive = true;
-            reverseAfterLockTimer.reset();
         }
     }
 
@@ -595,57 +585,33 @@ public class _redside extends DbzOpMode {
         if (!fastshoot) {
             if (rightTriggerHeld && !shootLast && !shooting) {
                 holdServo.setPosition(holdOpenPos);
-                intaketimer.reset();
-                shooting = true;
+                leftpushServo.setPosition(Push1);
+                rightpushServo.setPosition(Push1 - servooffset);
+                intaketimer.reset(); shooting = true;
             }
-
-            if (shooting) {
-                double t = intaketimer.milliseconds();
-                if (t > holdLeadTime && t < shot1) {
-                    leftpushServo.setPosition(Push1);
-                    rightpushServo.setPosition(Push1 - servooffset);
-                }
-
-                if (t > shotreturn) {
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
-                    holdServo.setPosition(holdClosePos);
-
-                    shooting = false;
-                    resetAfterShooting();
-                }
-                else if (t > shot2) {
-                    leftpushServo.setPosition(Push3);
-                    rightpushServo.setPosition(Push3 - servooffset);
-                }
-                else if (t > shot1) {
-                    leftpushServo.setPosition(Push2);
-                    rightpushServo.setPosition(Push2 - servooffset);
-                }
+            if (shooting && intaketimer.milliseconds() > shotreturn) {
+                leftpushServo.setPosition(Push0);
+                rightpushServo.setPosition(Push0 - servooffset);
+                holdServo.setPosition(holdClosePos);
+                shooting = false; resetAfterShooting();
+            } else if (shooting && intaketimer.milliseconds() > shot2) {
+                leftpushServo.setPosition(Push3);
+                rightpushServo.setPosition(Push3 - servooffset);
+            } else if (shooting && intaketimer.milliseconds() > shot1) {
+                leftpushServo.setPosition(Push2);
+                rightpushServo.setPosition(Push2 - servooffset);
             }
-        }
-
-        else {
+        } else {
             if (rightTriggerHeld && !shootLast && !shooting) {
                 holdServo.setPosition(holdOpenPos);
-
-                intaketimer.reset();
-                shooting = true;
-            }
-            if (shooting) {
-                double t = intaketimer.milliseconds();
-                if (t > holdLeadTime && t < 700) {
-                    leftpushServo.setPosition(Push3);
-                    rightpushServo.setPosition(Push3 - servooffset);
-                }
-                if (t > 700) {
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
-                    holdServo.setPosition(holdClosePos);
-
-                    shooting = false;
-                    resetAfterShooting();
-                }
+                leftpushServo.setPosition(Push3);
+                rightpushServo.setPosition(Push3 - servooffset);
+                intaketimer.reset(); shooting = true;
+            } if (shooting && intaketimer.milliseconds() > 700) {
+                leftpushServo.setPosition(Push0);
+                rightpushServo.setPosition(Push0 - servooffset);
+                holdServo.setPosition(holdClosePos);
+                shooting = false; resetAfterShooting();
             }
         }
         shootLast = rightTriggerHeld;
@@ -666,17 +632,6 @@ public class _redside extends DbzOpMode {
             return;
         }
 
-        if (reverseAfterLockActive) {
-            if (reverseAfterLockTimer.seconds() < reverseAfterLockDuration) {
-                intakeMotor.setPower(1);
-            } else {
-                intakeMotor.setPower(0);
-                reverseAfterLockActive = false;
-            }
-            lastRightBumper = rb;
-            lastLeftBumper = lb;
-            return;
-        }
         if (threeBallsLocked) {
             intakeMotor.setPower(0);
             lastRightBumper = rb;
