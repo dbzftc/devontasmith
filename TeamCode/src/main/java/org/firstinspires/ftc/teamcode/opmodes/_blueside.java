@@ -76,14 +76,14 @@ public class _blueside extends DbzOpMode {
     //0.01
 
 
-    public static double shotLeadTime = 0.8;
+    public static double shotLeadTime = 0.72;
 
     public static double hoodServoPos = 0.33;
 
     public static double holdOpenPos = 0.2;
-    public static double holdClosePos = 0.1;
+    public static double holdClosePos = 0.05;
 
-    public static double TV = -1400;
+    public static double TV = 0;
 
     public static double threshold = 90;
     public static double threshold2 = 160;
@@ -389,7 +389,7 @@ public class _blueside extends DbzOpMode {
             }
         } else {
             hoodServo.setPosition(hoodServoPos);
-            targetVelocity = 0;
+            targetVelocity = TV;
         }
 
         follower.setTeleOpDrive(
@@ -824,6 +824,9 @@ public class _blueside extends DbzOpMode {
         telemetryM.addData("PID Output", String.format("%.4f", pidOut));
         telemetryM.addData("FF Output", String.format("%.4f", ff));
         telemetryM.addData("Total Output", String.format("%.4f", output));
+
+        telemetry.addData("Turret Heading", currentAngleDeg);
+        telemetry.addData("Turret Desired Heading", targetAngleDeg);
     }
 
     private void runFlywheelVelocityControl() {
@@ -845,8 +848,9 @@ public class _blueside extends DbzOpMode {
 
         atWTarget = Math.abs(targetVelocity - currentVelocity) < 40;
 
-        telemetry.addData("Flywheel Target V", targetVelocity);
-        telemetry.addData("Flywheel Actual V", currentVelocity);
+        telemetry.addData("Flywheel Target Velocity", targetVelocity);
+        telemetry.addData("Flywheel Actual Velocity", currentVelocity);
+
     }
 
     private double getTurretAngleDeg() {

@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.auton;
 
+import static org.firstinspires.ftc.teamcode.auton._blueauto.holdClosePos;
+import static org.firstinspires.ftc.teamcode.opmodes._blueside.servooffset;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.bylazar.telemetry.TelemetryManager;
@@ -24,11 +27,50 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 @Autonomous(name = "_redauto", group = "Autonomous")
 public class _redauto extends DbzOpMode {
 
+    private final ElapsedTime detectionTimer = new ElapsedTime();
+
     public static double startX = 128.200;
-    public static double startY = 112.700;
+    public static double startY = 111.700;
     public static double startHeadingDeg = 90.0;
 
-    public static double targetX = 144.0;
+
+
+    public static double xend = 130;
+
+    public static double gate1y = 58.5;
+    public static double gate1x = 126.5;
+    public static double gate1h = 30;
+    public static double gate2x = 133;
+    public static double gate2y = 56.5;
+    public static double gate2h = 28;
+    public static double waitshoot1 = 1000;
+
+    public static double waitshoot2 = 500;
+
+    public static double waitgate1 = 150;
+    public static double waitgate2 = 1000;
+
+    //132, 58.5, 25
+    //133, 50, 28
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public static double holdClosePos = 0.05;
+    public static double lock = 0.15;
+
+    public static double targetX = 140.0;
     public static double targetY = 144.0;
 
     public static double holdOpenPos = 0.2;
@@ -39,10 +81,11 @@ public class _redauto extends DbzOpMode {
     public static double leftPushIdle = 0.06;
     public static double rightPushIdle = 0.083;
 
-    public static double targetVelocity = -1500;
+    public static double targetVelocity = -1340;
     public static double vkP = 4.8;
-    public static double vkF = 1.08;
-
+    public static double vkF = 1.26;
+//132, 58.5, 25
+    //133, 50, 28
     public static double turretZeroDeg = 295;
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
@@ -54,7 +97,7 @@ public class _redauto extends DbzOpMode {
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double hoodServoPos = 0.55;
+    public static double hoodServoPos = 0.33;
 
     public static double dthresh = 4.4;
 
@@ -70,8 +113,8 @@ public class _redauto extends DbzOpMode {
 
     private final ElapsedTime waitTimer = new ElapsedTime();
     private boolean shooting = false;
-    private double waitms = 0;
-
+    private double waitms = 1000;
+    private boolean detected = false;
     public static TelemetryManager telemetryM;
     protected DistanceSensor sensor1, sensor2;
     protected Servo light;
@@ -116,13 +159,13 @@ public class _redauto extends DbzOpMode {
             Path3 = follower.pathBuilder().addPath(
                     new BezierLine(
                             new Pose(103.946, 58.870),
-                            new Pose(129.542, 58.369)
+                            new Pose(xend, 58.369)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path4 = follower.pathBuilder().addPath(
                     new BezierCurve(
-                            new Pose(129.542, 58.369),
+                            new Pose(xend, 58.369),
                             new Pose(93.064, 56.912),
                             new Pose(96.274, 82.893)
                     )
@@ -132,61 +175,59 @@ public class _redauto extends DbzOpMode {
                     new BezierCurve(
                             new Pose(96.274, 82.893),
                             new Pose(95.341, 52.714),
-                            new Pose(129.860, 60.979)
+                            new Pose(gate1x, gate1y)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gate1h)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                    new BezierCurve(
-                            new Pose(129.860, 60.979),
-                            new Pose(125.687, 55.390),
-                            new Pose(131.012, 57.794)
+                    new BezierLine(
+                            new Pose(gate1x, gate1y),
+                            new Pose(gate2x, gate2y)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(40)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(gate1h), Math.toRadians(gate2h)).build();
 
             Path7 = follower.pathBuilder().addPath(
                     new BezierCurve(
-                            new Pose(131.012, 57.794),
+                            new Pose(gate2x, gate2y),
                             new Pose(97.177, 61.362),
                             new Pose(96.274, 82.893)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(0)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(gate2h), Math.toRadians(0)).build();
 
             Path8 = follower.pathBuilder().addPath(
                     new BezierCurve(
                             new Pose(96.274, 82.893),
                             new Pose(97.256, 61.222),
-                            new Pose(129.860, 60.979)
+                            new Pose(gate1x, gate1y)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gate1h)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                    new BezierCurve(
-                            new Pose(129.860, 60.979),
-                            new Pose(125.339, 55.290),
-                            new Pose(131.553, 57.974)
+                    new BezierLine(
+                            new Pose(gate1x, gate1y),
+                            new Pose(gate2x, gate2y)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(40)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(gate1h), Math.toRadians(gate2h)).build();
 
             Path10 = follower.pathBuilder().addPath(
                     new BezierCurve(
-                            new Pose(131.553, 57.974),
+                            new Pose(gate2x, gate2y),
                             new Pose(97.324, 61.233),
                             new Pose(96.274, 82.893)
                     )
-            ).setLinearHeadingInterpolation(Math.toRadians(40), Math.toRadians(0)).build();
+            ).setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(0)).build();
 
             Path11 = follower.pathBuilder().addPath(
                     new BezierCurve(
                             new Pose(96.274, 82.893),
                             new Pose(98.598, 84.288),
-                            new Pose(126.910, 83.648)
+                            new Pose(xend-6.5, 83.648)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path12 = follower.pathBuilder().addPath(
                     new BezierLine(
-                            new Pose(126.910, 83.648),
+                            new Pose(xend, 83.648),
                             new Pose(96.421, 82.904)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
@@ -202,13 +243,13 @@ public class _redauto extends DbzOpMode {
             Path14 = follower.pathBuilder().addPath(
                     new BezierLine(
                             new Pose(108.468, 35.275),
-                            new Pose(131.431, 35.119)
+                            new Pose(xend, 35.119)
                     )
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path15 = follower.pathBuilder().addPath(
                     new BezierCurve(
-                            new Pose(131.431, 35.119),
+                            new Pose(xend, 35.119),
                             new Pose(110.670, 63.406),
                             new Pose(96.421, 82.904)
                     )
@@ -262,7 +303,7 @@ public class _redauto extends DbzOpMode {
 
     @Override
     public void opLoop() {
-        intakeMotor.setPower(-1);
+
         follower.update();
         updateHoodAndVelocity();
         runFlywheelVelocityControl();
@@ -271,19 +312,37 @@ public class _redauto extends DbzOpMode {
         double dist1 = sensor1.getDistance(DistanceUnit.CM);
         double dist2 = sensor2.getDistance(DistanceUnit.CM);
 
-        boolean detected1 = dist1 < dthresh;
-        boolean detected2 = dist2 < dthresh;
+        if (!(dist1 < dthresh || dist2 < dthresh)) {
+            detectionTimer.reset();
+            detected = false;
 
-        if (detected1 || detected2) {
-            light.setPosition(0.5);
-        } else {
-            light.setPosition(0.0);
         }
+        detected = detectionTimer.milliseconds() > 500;
+
+
+
+
+
 
         holdServo.setPosition(holdOpenPos);
-        leftpushServo.setPosition(shooting ? leftPushShoot : leftPushIdle);
-        rightpushServo.setPosition(shooting ? rightPushShoot : rightPushIdle);
 
+        if (shooting) {
+            leftpushServo.setPosition(leftPushShoot);
+            rightpushServo.setPosition(rightPushShoot);
+            holdServo.setPosition(holdOpenPos);
+            intakeMotor.setPower(-1);
+        } else if (detected) {
+            leftpushServo.setPosition(lock);
+            rightpushServo.setPosition(lock - servooffset);
+            intakeMotor.setPower(1);
+
+
+
+        } else {
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
+            intakeMotor.setPower(-1);
+        }
         switch (state) {
             case 0:
                 follower.followPath(paths.Path1);
@@ -292,7 +351,7 @@ public class _redauto extends DbzOpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    beginWait(500, true, 2);
+                    beginWait(waitshoot1, true, 2);
                 }
                 break;
 
@@ -319,7 +378,7 @@ public class _redauto extends DbzOpMode {
 
             case 5:
                 if (!follower.isBusy()) {
-                    beginWait(500, true, 6);
+                    beginWait(waitshoot2, true, 6);
                 }
                 break;
 
@@ -332,7 +391,7 @@ public class _redauto extends DbzOpMode {
 
             case 7:
                 if (!follower.isBusy()) {
-                    beginWait(100, false, 8);
+                    beginWait(waitgate1, false, 8);
                 }
                 break;
 
@@ -345,12 +404,12 @@ public class _redauto extends DbzOpMode {
 
             case 9:
                 if (!follower.isBusy()) {
-                    beginWait(1000, false, 10);
+                    beginWait(waitgate2, false, 10);
                 }
                 break;
 
             case 10:
-                if (waitTimer.milliseconds() >= waitms || detected1 || detected2) {
+                if (waitTimer.milliseconds() >= waitgate2 || detected) {
                     shooting = false;
                     follower.followPath(paths.Path7);
                     state = 11;
@@ -359,7 +418,7 @@ public class _redauto extends DbzOpMode {
 
             case 11:
                 if (!follower.isBusy()) {
-                    beginWait(500, true, 12);
+                    beginWait(waitshoot2, true, 12);
                 }
                 break;
 
@@ -372,7 +431,7 @@ public class _redauto extends DbzOpMode {
 
             case 13:
                 if (!follower.isBusy()) {
-                    beginWait(100, false, 14);
+                    beginWait(waitgate1, false, 14);
                 }
                 break;
 
@@ -385,12 +444,15 @@ public class _redauto extends DbzOpMode {
 
             case 15:
                 if (!follower.isBusy()) {
-                    beginWait(1000, false, 16);
+                    beginWait(waitgate2, false, 16);
                 }
                 break;
 
+
+
             case 16:
-                if (waitDone()) {
+                if (waitTimer.milliseconds() >= waitgate2 || detected) {
+                    shooting = false;
                     follower.followPath(paths.Path10);
                     state = 17;
                 }

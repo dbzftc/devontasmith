@@ -83,7 +83,7 @@ public class _redside extends DbzOpMode {
     public static double holdOpenPos = 0.2;
     public static double holdClosePos = 0.1;
 
-    public static double TV = -1400;
+    public static double TV = 0;
 
     public static double threshold = 90;
     public static double threshold2 = 160;
@@ -370,7 +370,7 @@ public class _redside extends DbzOpMode {
             }
         } else {
             hoodServo.setPosition(hoodServoPos);
-            targetVelocity = 0;
+            targetVelocity = TV;
         }
 
         follower.setTeleOpDrive(
