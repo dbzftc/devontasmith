@@ -70,7 +70,7 @@ public class _redauto extends DbzOpMode {
     public static double holdClosePos = 0.05;
     public static double lock = 0.15;
 
-    public static double targetX = 140.0;
+    public static double targetX = 144.0;
     public static double targetY = 144.0;
 
     public static double holdOpenPos = 0.2;
