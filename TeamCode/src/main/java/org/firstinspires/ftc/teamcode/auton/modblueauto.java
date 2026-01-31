@@ -20,14 +20,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
-import org.firstinspires.ftc.teamcode.opmodes._blueside;
 
 @Config
-@Autonomous(name = "_blueauto", group = "Autonomous")
-public class _blueauto extends DbzOpMode {
+@Autonomous(name = "modblueauto", group = "Autonomous")
+public class modblueauto extends DbzOpMode {
 
     private final ElapsedTime detectionTimer = new ElapsedTime();
-    private final ElapsedTime shootTimer = new ElapsedTime();
 
     public static double startX = 15.800;
     public static double startY = 111.700;
@@ -35,44 +33,38 @@ public class _blueauto extends DbzOpMode {
 
     public static double xend = 14.0;
 
-    public static double gate1y = 59.21;
-    public static double gate1x = 12.0;
-    public static double gate1h = 159.0;
+    public static double gate1y = 58.5;
+    public static double gate1x = 17.5;
+    public static double gate1h = 155;
 
-    public static double gate2x = 12.0;
-    public static double gate2y = 58.21;
-    public static double gate2h = 159.0;
-
-    public static double leftUpPush = 0.023;
-    public static double rightUpPush = 0.00;
-    public static boolean intakeatwall = false;
+    public static double gate2x = 11.0;
+    public static double gate2y = 56.5;
+    public static double gate2h = 152.0;
 
     public static double waitshoot1 = 1000;
     public static double waitshoot2 = 500;
-    public static double waitgate1 = 300;
+    public static double waitgate1 = 1000;
+    public static double waitgate2 = 3000;
 
-    public static double waitgate1andahalf = 1000;
-    public static double waitgate2 = 2000;
-
-    public static double holdClosePos = 0.12;
+    public static double holdClosePos = 0.1;
     public static double lock = 0.15;
     public static double targetX = 0.0;
     public static double targetY = 144.0;
     public static double holdOpenPos = 0.2;
     public static double leftPushShoot = 0.66;
-    public static double rightPushShoot = 0.637;
+    public static double rightPushShoot = 0.683;
     public static double leftPushIdle = 0.06;
-    public static double rightPushIdle = 0.0577;
+    public static double rightPushIdle = 0.037;
     public static double targetVelocity = -1340;
     public static double vkP = 4.8;
-    public static double vkF = 1.22;
-    public static double turretZeroDeg = 329;
+    public static double vkF = 1.26;
+    public static double turretZeroDeg = 295;
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
     public static double turretKd = 0.002;
-    public static double turretMaxPower = 1;
-    public static double threshold = 180;
-    public static double threshold2 = 180;
+    public static double turretMaxPower = 0.7;
+    public static double threshold = 90;
+    public static double threshold2 = 160;
     public static double hoodServoPos = 0.33;
     public static double dthresh = 4.4;
 
@@ -115,8 +107,8 @@ public class _blueauto extends DbzOpMode {
             ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(gate1h)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(gate1x, gate1y), new Pose(gate2x, gate2y))
-            ).setLinearHeadingInterpolation(Math.toRadians(gate1h), Math.toRadians(gate2h)).build();
+                    new BezierLine(new Pose(gate1x, gate1y), new Pose(gate1x, gate1y))
+            ).setLinearHeadingInterpolation(Math.toRadians(gate1h), Math.toRadians(gate1h)).build();
 
             Path7 = follower.pathBuilder().addPath(
                     new BezierCurve(new Pose(gate2x, gate2y), new Pose(46.82, 61.36), new Pose(47.73, 82.89))
@@ -151,11 +143,11 @@ public class _blueauto extends DbzOpMode {
             ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
 
             Path15 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(xend, 35.12), new Pose(33.33, 63.41), new Pose(47.58, 82.90))
+                    new BezierCurve(new Pose(xend, 35.12), new Pose(33.33, 63.41), new Pose(47.73, 82.89))
             ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
 
             Path16 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(47.58, 82.90), new Pose(26.48, 82.68))
+                    new BezierLine(new Pose(47.73, 82.90), new Pose(26.48, 82.89))
             ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
         }
     }
@@ -189,8 +181,14 @@ public class _blueauto extends DbzOpMode {
     }
 
     @Override
+    protected void opLoopHook() {
+
+    }
+
+    @Override
     public void opLoop() {
         follower.update();
+        updateHoodAndVelocity();
         runFlywheelVelocityControl();
         runTurretAlwaysOn();
 
@@ -200,26 +198,28 @@ public class _blueauto extends DbzOpMode {
             detectionTimer.reset();
             detected = false;
         }
-        detected = detectionTimer.milliseconds() > 500;
+        detected = detectionTimer.milliseconds() > 200;
 
-        if(intakeatwall){}
-        else if (shooting) {
+
+
+        if (shooting) {
             leftpushServo.setPosition(leftPushShoot);
             rightpushServo.setPosition(rightPushShoot);
             holdServo.setPosition(holdOpenPos);
-            intakeMotor.setPower(-1.0);
-        } else if (follower.isBusy()) {
-            leftpushServo.setPosition(leftPushIdle);
-            rightpushServo.setPosition(rightPushIdle);
-            intakeMotor.setPower(-1.0);
-            holdServo.setPosition(holdClosePos);
+            intakeMotor.setPower(-1);
         } else if (detected) {
             leftpushServo.setPosition(lock);
-            rightpushServo.setPosition(lock - _blueside.servooffset);
-            intakeMotor.setPower(0);
+            rightpushServo.setPosition(lock - servooffset);
+            intakeMotor.setPower(1);
             holdServo.setPosition(holdClosePos);
+
+
+
         } else {
-            intakeMotor.setPower(0);
+            leftpushServo.setPosition(leftPushIdle);
+            rightpushServo.setPosition(rightPushIdle);
+            intakeMotor.setPower(-1);
+            holdServo.setPosition(holdOpenPos);
         }
 
         switch (state) {
@@ -227,132 +227,167 @@ public class _blueauto extends DbzOpMode {
                 follower.followPath(paths.Path1);
                 state = 1;
                 break;
+
             case 1:
-                if (!follower.isBusy()) beginWait(waitshoot1, true, 2);
+                if (!follower.isBusy()) {
+                    beginWait(waitshoot1, true, 2);
+                }
                 break;
+
             case 2:
                 if (waitDone()) {
                     follower.followPath(paths.Path2);
                     state = 3;
                 }
                 break;
+
             case 3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path3);
                     state = 4;
                 }
                 break;
+
             case 4:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path4);
                     state = 5;
                 }
                 break;
+
             case 5:
-                if (!follower.isBusy()) beginWait(waitshoot2, true, 6);
+                if (!follower.isBusy()) {
+                    beginWait(waitshoot2, true, 6);
+                }
                 break;
+
             case 6:
                 if (waitDone()) {
                     follower.followPath(paths.Path5);
                     state = 7;
                 }
                 break;
+
             case 7:
-                if (!follower.isBusy()) beginWait(waitgate1, false, 8);
-                intakeatwall=true;
+                if (!follower.isBusy()) {
+                    beginWait(waitgate1, false, 8);
+                }
                 break;
+
             case 8:
                 if (waitDone()) {
                     follower.followPath(paths.Path6);
-                    intakeatwall=true;
                     state = 9;
                 }
                 break;
+
             case 9:
-                if (!follower.isBusy()) beginWait(waitgate2, false, 10);
-                intakeatwall= true;
+                if (!follower.isBusy()) {
+                    beginWait(waitgate2, false, 10);
+                }
                 break;
+
             case 10:
                 if (waitTimer.milliseconds() >= waitgate2 || detected) {
                     shooting = false;
-                    intakeatwall=true;
                     follower.followPath(paths.Path7);
                     state = 11;
                 }
                 break;
+
             case 11:
-                if (!follower.isBusy()) beginWait(waitshoot2, true, 12);
-                intakeatwall=false;
+                if (!follower.isBusy()) {
+                    beginWait(waitshoot2, true, 12);
+                }
                 break;
+
             case 12:
                 if (waitDone()) {
                     follower.followPath(paths.Path8);
                     state = 13;
                 }
                 break;
+
             case 13:
-                if (!follower.isBusy()) beginWait(waitgate1andahalf, false, 14);
-                intakeatwall=true;
+                if (!follower.isBusy()) {
+                    beginWait(waitgate1, false, 14);
+                }
                 break;
+
             case 14:
                 if (waitDone()) {
                     follower.followPath(paths.Path9);
-                    intakeatwall=true;
                     state = 15;
                 }
                 break;
+
             case 15:
-                if (!follower.isBusy()) beginWait(waitgate2, false, 16);
-                intakeatwall=true;
+                if (!follower.isBusy()) {
+                    beginWait(waitgate2, false, 16);
+                }
                 break;
+
             case 16:
                 if (waitTimer.milliseconds() >= waitgate2 || detected) {
                     shooting = false;
-                    intakeatwall=true;
                     follower.followPath(paths.Path10);
                     state = 17;
                 }
                 break;
+
             case 17:
-                if (!follower.isBusy()) beginWait(500, true, 18);
-                intakeatwall=false;
+                if (!follower.isBusy()) {
+                    beginWait(500, true, 25);
+                }
                 break;
+
             case 18:
                 if (waitDone()) {
                     follower.followPath(paths.Path11);
                     state = 19;
                 }
                 break;
+
             case 19:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path12);
                     state = 20;
                 }
                 break;
+
             case 20:
-                if (!follower.isBusy()) beginWait(500, true, 21);
+                if (!follower.isBusy()) {
+                    beginWait(500, true, 21);
+                }
                 break;
+
             case 21:
                 if (waitDone()) {
                     follower.followPath(paths.Path13);
                     state = 22;
                 }
                 break;
+
             case 22:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path14);
                     state = 23;
                 }
                 break;
+
             case 23:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path15);
                     state = 24;
                 }
                 break;
+
             case 24:
-                if (!follower.isBusy()) beginWait(500, true, 25);
+                if (!follower.isBusy()) {
+                    beginWait(500, true, 25);
+                }
                 break;
+
             case 25:
                 if (waitDone()) {
                     follower.followPath(paths.Path16);
@@ -362,10 +397,16 @@ public class _blueauto extends DbzOpMode {
         }
     }
 
+    private void updateHoodAndVelocity() {
+        if (state >= 30) {
+            targetVelocity = -500;
+            return;
+        }
+    }
+
     private void beginWait(double ms, boolean shoot, int nxt) {
         waitms = ms;
         shooting = shoot;
-        if (shoot) shootTimer.reset();
         waitTimer.reset();
         state = nxt;
     }
@@ -406,11 +447,7 @@ public class _blueauto extends DbzOpMode {
         return ((a + 180) % 360 + 360) % 360 - 180;
     }
 
-    @Override
-    public void opLoopHook() {}
-
-    @Override
-    public void opTeardown() {
+    @Override public void opTeardown() {
         org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose = follower.getPose();
     }
 }

@@ -48,12 +48,14 @@ public class _blueside extends DbzOpMode {
     private double lastLightPos = -1;
     private double lastLight2Pos = -1;
 
-    public static double targetX = 0; // Matching Blue Side
+    public static double targetX = 0;
     public static double targetY = 144;
 
     public static double targetVelocity = -500;
     public static double vkP = 4.8;
-    public static double vkF = 1.26;
+    public static double vkF = 1.22;
+
+    //11 56 152
 
     public static double servooffset = 0.023;
     public static double Push0 = 0.06;
@@ -73,20 +75,24 @@ public class _blueside extends DbzOpMode {
 
     public static double dtoffset = 2.0;
 
-    public static double shotLeadTime = 0.62;
+    public static double voffset1 = 0;
+
+    public static double voffset2 = 0;
+
+    public static double shotLeadTime = 0.65;
 
     public static double hoodServoPos = 0.33;
 
     public static double holdOpenPos = 0.2;
-    public static double holdClosePos = 0.05;
+    public static double holdClosePos = 0.1;
 
     public static double TV = 0;
 
-    public static double threshold = 90;
-    public static double threshold2 = 160;
+    public static double threshold = 120;
+    public static double threshold2 = 180;
 
 
-    public static double turretZeroDeg =295;
+    public static double turretZeroDeg =329;
 
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
@@ -95,15 +101,15 @@ public class _blueside extends DbzOpMode {
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 1;
 
-    public static double turretKs = 0.0;
+    public static double turretKs = 0.001;
     public static double turretFFDeadbandDeg = 0.0;
 
     public static double turretPivotForwardIn = 0.0;
     public static double turretPivotLeftIn = 0.0;
 
-    public static double startX = 8;
-    public static double startY = 8.5;
-    public static double startHeadingDeg = 0.0;
+    public static double startX = 0;
+    public static double startY = 0;
+    public static double startHeadingDeg = 90;
 
     private Pose lastPose = new Pose();
     private double lastTime = 0;
@@ -265,6 +271,7 @@ public class _blueside extends DbzOpMode {
                 double distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance >= 125) {
 
+//
 //                    double originalPos = 0.000316354 * Math.pow(distance, 2)
 //                            - 0.0843748 * distance
 //                            + 6.1213;
@@ -277,7 +284,7 @@ public class _blueside extends DbzOpMode {
                             - 21.06598;
                     targetVelocity = (-0.0421989 * distance * distance
                             + 4.87989 * distance
-                            - 1583.24308);
+                            - 1583.24308 + voffset1);
 
                     if (!shooting) {
                         hoodServo.setPosition(originalPos);
@@ -291,13 +298,14 @@ public class _blueside extends DbzOpMode {
                         }
                     }
                 } else if (distance < 125) {
+
                     double originalPos = 0.00000326247 * Math.pow(distance, 3)
                             - 0.000953594 * Math.pow(distance, 2)
                             + 0.0932128 * distance
                             - 2.53108;
                     targetVelocity = (0.0381071 * distance * distance
                             - 11.86256 * distance
-                            - 717.83856);
+                            - 717.83856 + voffset1);
                     if (!shooting) {
                         hoodServo.setPosition(originalPos);
                     } else {
@@ -318,7 +326,7 @@ public class _blueside extends DbzOpMode {
             hoodServo.setPosition(hoodServoPos);
             targetVelocity = TV;
         }
-//
+
 //        if(autoHoodActive) {
 //            if (ppose != null) {
 //                double dx = targetX - ppose.getX();
@@ -626,7 +634,7 @@ public class _blueside extends DbzOpMode {
 
         // 1) Shooting always wins: intake OFF
         if (shooting) {
-            intakeMotor.setPower(0);
+            intakeMotor.setPower(-1);
             lastRightBumper = rb;
             lastLeftBumper = lb;
             return;
@@ -782,11 +790,7 @@ public class _blueside extends DbzOpMode {
         double dx = targetX - pose.getX();
         double dy = targetY - pose.getY();
         double distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance >= 125) {
-            turretAngleDeg += turretHeadingOffsetDeg  - dtoffset;
-        } else {
-            turretAngleDeg += turretHeadingOffsetDeg;
-        }
+
 
         return angleWrap(turretAngleDeg);
     }
