@@ -23,8 +23,8 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 import org.firstinspires.ftc.teamcode.opmodes._blueside;
 
 @Config
-@Autonomous(name = "_redauto", group = "Autonomous")
-public class _redauto extends DbzOpMode {
+@Autonomous(name = "_redautonew", group = "Autonomous")
+public class _redautoootbrizz extends DbzOpMode {
 
     private final ElapsedTime detectionTimer = new ElapsedTime();
     private final ElapsedTime shootTimer = new ElapsedTime();
@@ -40,8 +40,11 @@ public class _redauto extends DbzOpMode {
     public static double gate1x = 132;
     public static double gate1h = 21;
 
+
+
     public static double gate2x = 132;
     public static double gate2y = 58.21;
+
     public static double gate2h = 21;
 
     public static double leftUpPush = 0.023;
@@ -128,11 +131,11 @@ public class _redauto extends DbzOpMode {
             ).setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gate1h)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                    new BezierLine(new Pose(gate1x, gate1y), new Pose(gate2x, gate2y))
+                    new BezierLine(new Pose(gate1x, gate1y), new Pose(122, 59.21))
             ).setLinearHeadingInterpolation(Math.toRadians(gate1h), Math.toRadians(gate2h)).build();
 
             Path10 = follower.pathBuilder().addPath(
-                    new BezierCurve(new Pose(gate2x, gate2y), new Pose(97.32, 61.23), new Pose(96.27, 82.89))
+                    new BezierCurve(new Pose(122, 59.21), new Pose(97.32, 61.23), new Pose(96.27, 82.89))
             ).setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(0)).build();
 
             Path11 = follower.pathBuilder().addPath(

@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
+import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -16,7 +16,6 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -28,8 +27,8 @@ import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
 
 @Config
-@TeleOp(name = "_blueside")
-public class _blueside extends DbzOpMode {
+@TeleOp(name = "_redsideootbrizz")
+public class _redsideootbrizz extends DbzOpMode {
     private ElapsedTime intaketimer = new ElapsedTime();
     private ElapsedTime threeBallTimer = new ElapsedTime();
     private ElapsedTime pushDelayTimer = new ElapsedTime();
@@ -48,7 +47,7 @@ public class _blueside extends DbzOpMode {
     private double lastLightPos = -1;
     private double lastLight2Pos = -1;
 
-    public static double targetX = 0;
+    public static double targetX = 144;
     public static double targetY = 144;
 
     public static double targetVelocity = -500;
@@ -215,7 +214,7 @@ public class _blueside extends DbzOpMode {
 
         follower = Constants.createFollower(hardwareMap);
 
-        follower.setStartingPose(org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose);
+        follower.setStartingPose(PoseCache.lastPose);
         lastPose = follower.getPose();
         velocityTimer.reset();
         lastTime = 0.0;

@@ -28,6 +28,7 @@ public class _blueauto extends DbzOpMode {
 
     private final ElapsedTime detectionTimer = new ElapsedTime();
     private final ElapsedTime shootTimer = new ElapsedTime();
+    private final ElapsedTime jawntimer = new ElapsedTime();
 
     public static double startX = 15.800;
     public static double startY = 111.700;
@@ -65,7 +66,8 @@ public class _blueauto extends DbzOpMode {
     public static double rightPushIdle = 0.0577;
     public static double targetVelocity = -1340;
     public static double vkP = 4.8;
-    public static double vkF = 1.22;
+    public static double vkF = 1.32;
+
     public static double turretZeroDeg = 329;
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
@@ -213,13 +215,20 @@ public class _blueauto extends DbzOpMode {
             rightpushServo.setPosition(rightPushIdle);
             intakeMotor.setPower(-1.0);
             holdServo.setPosition(holdClosePos);
-        } else if (detected) {
+        } else if (detected &&!shooting) {
+            jawntimer.reset();
             leftpushServo.setPosition(lock);
             rightpushServo.setPosition(lock - _blueside.servooffset);
-            intakeMotor.setPower(0);
+            if(jawntimer.milliseconds()<500) {
+                intakeMotor.setPower(-1);
+            }
+            else if (jawntimer.milliseconds()>500){
+                intakeMotor.setPower(0);
+            }
             holdServo.setPosition(holdClosePos);
         } else {
             intakeMotor.setPower(0);
+
         }
 
         switch (state) {

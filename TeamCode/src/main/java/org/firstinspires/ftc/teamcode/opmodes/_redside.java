@@ -53,7 +53,7 @@ public class _redside extends DbzOpMode {
 
     public static double targetVelocity = -500;
     public static double vkP = 4.8;
-    public static double vkF = 1.22;
+    public static double vkF = 1.32;
 
     //11 56 152
 
