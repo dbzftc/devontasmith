@@ -55,14 +55,12 @@ public class _redside extends DbzOpMode {
     public static double vkP = 4.8;
     public static double vkF = 1.32;
 
-    //11 56 152
-
-    public static double servooffset = 0.023;
-    public static double Push0 = 0.06;
-    public static double Push1 = 0.4;
-    public static double Push2 = 0.6;
-    public static double Push3 = 0.66;
-    public static double lock = 0.15;
+    public static double servooffset = 0.05;
+    public static double Push0 = 0.81;
+    public static double Push1 = 0.65;
+    public static double Push2 = 0.45;
+    public static double Push3 = 0.26;
+    public static double lock = 0.75;
     public static double shot1 = 250;
     public static double shot2 = 500;
     public static double shotreturn = 750;
@@ -122,6 +120,7 @@ public class _redside extends DbzOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private AnalogInput turretEncoder;
+    private AnalogInput distance;
 
     private boolean shootLast = false;
     private boolean shooting = false;
@@ -162,9 +161,9 @@ public class _redside extends DbzOpMode {
     @IgnoreConfigurable
     public static TelemetryManager telemetryM;
     protected DistanceSensor sensor1, sensor2;
-    protected Servo light, light2;
+//    protected Servo light, light2;
 
-    public static double dthresh = 4.0;
+    public static double dthresh = 0.24;
 
 
     @Override
@@ -179,14 +178,15 @@ public class _redside extends DbzOpMode {
 
         sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
         sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-
-        light = hardwareMap.get(Servo.class, "light");
-        light2 = hardwareMap.get(Servo.class, "light2");
+        distance = hardwareMap.get(AnalogInput.class, "distance");
+//
+//        light = hardwareMap.get(Servo.class, "light");
+//        light2 = hardwareMap.get(Servo.class, "light2");
 
         hoodServo.setPosition(hoodServoPos);
         holdServo.setPosition(holdClosePos);
         leftpushServo.setPosition(Push0);
-        rightpushServo.setPosition(Push0-servooffset);
+        rightpushServo.setPosition(Push0 - servooffset);
 
         intakeMotor = robot.intakeMotor;
         outtake1Motor = robot.outtake1Motor;
@@ -382,12 +382,12 @@ public class _redside extends DbzOpMode {
 //        }
 
         follower.setTeleOpDrive(
-                -gamepad1.left_stick_y,
-                -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x,
+                gamepad1.left_stick_y,
+                gamepad1.left_stick_x,
+                gamepad1.right_stick_x,
                 true
         );
-        updateLights();
+//        updateLights();
         checkThreeBallsAndLock();
         updateVelocity();
         shoot();
@@ -411,25 +411,21 @@ public class _redside extends DbzOpMode {
         }
 
         addDebugTelemetry();
-
+        telemetryM.addData("Raw Voltage", distance.getVoltage());
         telemetryM.update(telemetry);
         telemetry.update();
     }
 
     private void checkThreeBallsAndLock() {
-        double dist1 = sensor1.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
-        double dist2 = sensor2.getDistance(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.CM);
-        boolean detected1 = dist1 < dthresh;
-        boolean detected2 = dist2 < dthresh;
-        boolean ballDetected = detected1 || detected2;
+        double dist = distance.getVoltage();
+        boolean detected1 = dist < dthresh;
 
         telemetryM.addData("=== PROXIMITY SENSORS ===", "");
-        telemetryM.addData("Sensor 1 (cm)", String.format("%.2f", dist1));
+        telemetryM.addData("Sensor 1 (cm)", String.format("%.2f", dist));
         telemetryM.addData("Sensor 1 Detected", detected1 ? "YES" : "NO");
-        telemetryM.addData("Sensor 2 (cm)", String.format("%.2f", dist2));
-        telemetryM.addData("Sensor 2 Detected", detected2 ? "YES" : "NO");
 
-        if (!ballDetected) {
+
+        if (!detected1) {
             threeBallTimer.reset();
             pushDelayTimer.reset();
             threeBallsLocked = false;
@@ -466,37 +462,37 @@ public class _redside extends DbzOpMode {
         rightpushServo.setPosition(Push0 - servooffset);
         intakeForwardOn = true;
         intakeReverseOn = false;
-        intakeMotor.setPower(-1);
+        intakeMotor.setPower(1);
     }
-
-    private void updateLights() {
-        if (light == null || light2 == null) return;
-
-        double newPos;
-
-        if (threeBallsLocked) {
-            newPos = 0.722;
-        }
-        else {
-            newPos = 0.0;
-        }
-
-        if (newPos != 0.0 && newPos != 0.722) {
-            newPos = 0.0;
-        }
-
-        newPos = Math.round(newPos * 1000.0) / 1000.0;
-
-        if (Math.abs(lastLightPos - newPos) > 0.001) {
-            light.setPosition(newPos);
-            lastLightPos = newPos;
-        }
-
-        if (Math.abs(lastLight2Pos - newPos) > 0.001) {
-            light2.setPosition(newPos);
-            lastLight2Pos = newPos;
-        }
-    }
+//
+//    private void updateLights() {
+//        if (light == null || light2 == null) return;
+//
+//        double newPos;
+//
+//        if (threeBallsLocked) {
+//            newPos = 0.722;
+//        }
+//        else {
+//            newPos = 0.0;
+//        }
+//
+//        if (newPos != 0.0 && newPos != 0.722) {
+//            newPos = 0.0;
+//        }
+//
+//        newPos = Math.round(newPos * 1000.0) / 1000.0;
+//
+//        if (Math.abs(lastLightPos - newPos) > 0.001) {
+//            light.setPosition(newPos);
+//            lastLightPos = newPos;
+//        }
+//
+//        if (Math.abs(lastLight2Pos - newPos) > 0.001) {
+//            light2.setPosition(newPos);
+//            lastLight2Pos = newPos;
+//        }
+//    }
 
     private void updateVelocity() {
         Pose currentPose = follower.getPose();
@@ -634,7 +630,7 @@ public class _redside extends DbzOpMode {
 
         // 1) Shooting always wins: intake OFF
         if (shooting) {
-            intakeMotor.setPower(-1);
+            intakeMotor.setPower(1);
             lastRightBumper = rb;
             lastLeftBumper = lb;
             return;
@@ -656,9 +652,9 @@ public class _redside extends DbzOpMode {
             intakeForwardOn = false;
         }
         if (intakeForwardOn) {
-            intakeMotor.setPower(-1);
-        } else if (intakeReverseOn) {
             intakeMotor.setPower(1);
+        } else if (intakeReverseOn) {
+            intakeMotor.setPower(-1);
         } else {
             intakeMotor.setPower(0);
         }

@@ -107,7 +107,7 @@ public class V2RED extends DbzOpMode {
     private AnalogInput turretEncoder;
 
     private DistanceSensor sensor1, sensor2;
-    protected Servo light, light2;
+//    protected Servo light, light2;
 
     private double lastLightPos = -1;
     private double lastLight2Pos = -1;
@@ -159,9 +159,9 @@ public class V2RED extends DbzOpMode {
 
         sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
         sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-
-        light  = hardwareMap.get(Servo.class, "light");
-        light2 = hardwareMap.get(Servo.class, "light2");
+//
+//        light  = hardwareMap.get(Servo.class, "light");
+//        light2 = hardwareMap.get(Servo.class, "light2");
 
         hoodServo.setPosition(hoodServoPos);
         holdServo.setPosition(holdClosePos);
@@ -205,9 +205,9 @@ public class V2RED extends DbzOpMode {
         if (follower.getCurrentPath() != null) {
             drawOnlyCurrent();
         }
-
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.start();
+//
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+//        limelight.start();
 
         follower.startTeleopDrive();
     }
@@ -257,7 +257,7 @@ public class V2RED extends DbzOpMode {
 
         applyHoodAndVelocityRegressions();
 
-        updateLights();
+//        updateLights();
         checkThreeBallsAndLock();
         shootFastOnly();
         activeIntake();
@@ -384,24 +384,24 @@ public class V2RED extends DbzOpMode {
         intakeReverseOn = false;
         intakeMotor.setPower(-1);
     }
-
-    private void updateLights() {
-
-        if (light == null || light2 == null) return;
-
-        double newPos = threeBallsLocked ? 0.722 : 0.0;
-        newPos = Math.round(newPos * 1000.0) / 1000.0;
-
-        if (Math.abs(lastLightPos - newPos) > 0.001) {
-            light.setPosition(newPos);
-            lastLightPos = newPos;
-        }
-
-        if (Math.abs(lastLight2Pos - newPos) > 0.001) {
-            light2.setPosition(newPos);
-            lastLight2Pos = newPos;
-        }
-    }
+//
+//    private void updateLights() {
+//
+//        if (light == null || light2 == null) return;
+//
+//        double newPos = threeBallsLocked ? 0.722 : 0.0;
+//        newPos = Math.round(newPos * 1000.0) / 1000.0;
+//
+//        if (Math.abs(lastLightPos - newPos) > 0.001) {
+//            light.setPosition(newPos);
+//            lastLightPos = newPos;
+//        }
+//
+//        if (Math.abs(lastLight2Pos - newPos) > 0.001) {
+//            light2.setPosition(newPos);
+//            lastLight2Pos = newPos;
+//        }
+//    }
 
     private void shootFastOnly() {
 
