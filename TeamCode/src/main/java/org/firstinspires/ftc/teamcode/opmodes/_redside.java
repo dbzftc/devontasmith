@@ -120,7 +120,7 @@ public class _redside extends DbzOpMode {
 
     private VoltageSensor batteryVoltageSensor;
     private AnalogInput turretEncoder;
-    private AnalogInput distance;
+    private AnalogInput distancez;
 
     private boolean shootLast = false;
     private boolean shooting = false;
@@ -178,7 +178,7 @@ public class _redside extends DbzOpMode {
 
         sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
         sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-        distance = hardwareMap.get(AnalogInput.class, "distance");
+        distancez = hardwareMap.get(AnalogInput.class, "distance");
 //
 //        light = hardwareMap.get(Servo.class, "light");
 //        light2 = hardwareMap.get(Servo.class, "light2");
@@ -411,13 +411,13 @@ public class _redside extends DbzOpMode {
         }
 
         addDebugTelemetry();
-        telemetryM.addData("Raw Voltage", distance.getVoltage());
+        telemetryM.addData("Raw Voltage", distancez.getVoltage());
         telemetryM.update(telemetry);
         telemetry.update();
     }
 
     private void checkThreeBallsAndLock() {
-        double dist = distance.getVoltage();
+        double dist = distancez.getVoltage();
         boolean detected1 = dist < dthresh;
 
         telemetryM.addData("=== PROXIMITY SENSORS ===", "");
