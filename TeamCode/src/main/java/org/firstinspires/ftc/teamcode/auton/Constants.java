@@ -17,10 +17,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-        .mass(15.876)
-        .forwardZeroPowerAcceleration(-30.124)
-        .lateralZeroPowerAcceleration(-66.66695197577063)
-        .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.001))
+        .mass(12.51915)
+        .forwardZeroPowerAcceleration(-30.284583120240786)
+        .lateralZeroPowerAcceleration(-80.42751649688425)
+        .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.013, 0.001))
         .headingPIDFCoefficients(new PIDFCoefficients(1.0, 0, 0.01, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.02,0.0,0.00001,0.5,0.03));
 
@@ -43,18 +43,18 @@ public class Constants {
             .rightRearMotorName("backRight")
             .leftRearMotorName("backLeft")
             .leftFrontMotorName("frontLeft")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(80.2593076)
-            .yVelocity(61.165577325);
+            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .xVelocity(77.7877379890502)
+            .yVelocity(53.97284368079479);
 
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(-8.5)
-            .strafePodX(2)
+            .forwardPodY(-4.311)
+            .strafePodX(0)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)

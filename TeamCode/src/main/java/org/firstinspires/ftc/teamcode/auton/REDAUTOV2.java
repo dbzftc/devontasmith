@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.auton.Constants;
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
@@ -57,78 +56,92 @@ public class REDAUTOV2 extends DbzOpMode {
     public static double threshold2 = 180;
     public static double turretHeadingOffsetDeg = 0.0;
 
+    public static double startX = 111.702;
+    public static double startY = 134.112;
+
+    public static double shootX = 98.286;
+    public static double shootY = 83.627;
+
+    public static double gateX = 136.273;
+    public static double gateY = 61.398;
+
+    public static double nearWallX = 121.5;
+    public static double nearWallY1 = 59.807;
+    public static double nearWallY2 = 83.671;
+    public static double nearWallY3 = 34.776;
+
     public static class Paths {
         public PathChain Path1, Path2, Path3, Path4, Path5, Path6, Path7;
         public PathChain Path8, Path9, Path10, Path11, Path12, Path13;
 
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(32.298, 134.112), new Pose(45.714, 83.627)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(282))
+                    .addPath(new BezierLine(new Pose(startX, startY), new Pose(shootX, shootY)))
+                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(262))
                     .build();
 
             Path4 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(45.714, 83.627), new Pose(51.180, 59.307), new Pose(22.385, 59.807)))
+                    .addPath(new BezierCurve(new Pose(shootX, shootY), new Pose(51.180, 59.307), new Pose(nearWallX, nearWallY1)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path5 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(22.385, 59.807), new Pose(51.180, 59.307), new Pose(45.714, 83.627)))
+                    .addPath(new BezierCurve(new Pose(nearWallX, nearWallY1), new Pose(51.180, 59.307), new Pose(shootX, shootY)))
                     .setTangentHeadingInterpolation()
                     .setReversed()
                     .build();
 
             Path6 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(45.714, 83.627), new Pose(35.205, 47.668), new Pose(7.727, 61.398)))
+                    .addPath(new BezierCurve(new Pose(shootX, shootY), new Pose(35.205, 47.668), new Pose(gateX, gateY)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path7 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(7.727, 61.398), new Pose(35.205, 47.668), new Pose(45.714, 83.627)))
+                    .addPath(new BezierCurve(new Pose(gateX, gateY), new Pose(35.205, 47.668), new Pose(shootX, shootY)))
                     .setTangentHeadingInterpolation()
                     .setReversed()
                     .build();
 
             Path8 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(45.714, 83.627), new Pose(35.205, 47.668), new Pose(7.727, 61.398)))
+                    .addPath(new BezierCurve(new Pose(shootX, shootY), new Pose(35.205, 47.668), new Pose(gateX, gateY)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path9 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(7.727, 61.398), new Pose(35.205, 47.668), new Pose(45.714, 83.627)))
+                    .addPath(new BezierCurve(new Pose(gateX, gateY), new Pose(35.205, 47.668), new Pose(shootX, shootY)))
                     .setTangentHeadingInterpolation()
                     .setReversed()
                     .build();
 
             Path10 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(45.714, 83.627), new Pose(35.205, 47.668), new Pose(7.727, 61.398)))
+                    .addPath(new BezierCurve(new Pose(shootX, shootY), new Pose(35.205, 47.668), new Pose(gateX, gateY)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path11 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(7.727, 61.398), new Pose(35.205, 47.668), new Pose(45.714, 83.627)))
+                    .addPath(new BezierCurve(new Pose(gateX, gateY), new Pose(35.205, 47.668), new Pose(shootX, shootY)))
                     .setTangentHeadingInterpolation()
                     .setReversed()
                     .build();
 
             Path2 = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(45.714, 83.627), new Pose(22.981, 83.671)))
+                    .addPath(new BezierLine(new Pose(shootX, shootY), new Pose(nearWallX, nearWallY2)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path3 = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(22.981, 83.671), new Pose(45.714, 83.627)))
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(275))
+                    .addPath(new BezierLine(new Pose(nearWallX, nearWallY2), new Pose(shootX, shootY)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(265))
                     .setReversed()
                     .build();
 
             Path12 = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(45.714, 83.627), new Pose(50.870, 34.736), new Pose(22.248, 34.776)))
+                    .addPath(new BezierCurve(new Pose(shootX, shootY), new Pose(50.870, 34.736), new Pose(nearWallX, nearWallY3)))
                     .setTangentHeadingInterpolation()
                     .build();
 
             Path13 = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(22.248, 34.776), new Pose(59.360, 99.615)))
+                    .addPath(new BezierLine(new Pose(nearWallX, nearWallY3), new Pose(59.360, 99.615)))
                     .setTangentHeadingInterpolation()
                     .setReversed()
                     .build();
@@ -142,8 +155,6 @@ public class REDAUTOV2 extends DbzOpMode {
 
     private Follower follower;
     private Paths paths;
-
-    private static final Pose START_POSE = new Pose(32.298, 134.112, Math.toRadians(180));
 
     private enum AutonState {
         FOLLOW_PATH1, SHOOT_1,
@@ -219,7 +230,7 @@ public class REDAUTOV2 extends DbzOpMode {
                 telemetry, FtcDashboard.getInstance().getTelemetry());
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(START_POSE);
+        follower.setStartingPose(new Pose(startX, startY, Math.toRadians(0)));
         paths = new Paths(follower);
 
         velocityTimer.reset();
@@ -652,7 +663,5 @@ public class REDAUTOV2 extends DbzOpMode {
     @Override public void opLoopHook() {}
 
     @Override
-    public void opTeardown() {
-
-    }
+    public void opTeardown() {}
 }
