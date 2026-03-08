@@ -51,23 +51,23 @@ public class V2RED extends DbzOpMode {
     private double lastLightPos = -1;
     public static double shot1 = 300;
     public static double shot2 = 600;
-    public static double shotreturn = 750;
+    public static double shotreturn = 1000;
 
     private boolean threeBallsLocked = false;
     private boolean holdOpened = false;
 
-    public static double servooffset = 0.05;
+    public static double servooffset = 0.01;
 
     public static double Push0 = 0.81;
-    public static double timeeiieiu = 0.5;
-    public static double Push1 = 0.63;
-    public static double Push2 = 0.43;
-    public static double Push3 = 0.26;
+    public static double timeeiieiu = 0.4;
+    public static double Push1 = 0.67;
+    public static double Push2 = 0.47;
+    public static double Push3 = 0.22;
 
-    public static double lock = 0.75;
+    public static double lock = 0.71;
 
-    public static double holdOpenPos = 0.8;
-    public static double holdClosePos = 0.8;
+    public static double holdOpenPos = 0.75;
+    public static double holdClosePos = 0.75;
 
     public static double dthresh = 0.24;
 
@@ -77,7 +77,6 @@ public class V2RED extends DbzOpMode {
 
     public static double velA = -0.0157003, velB = 11.6092, velC = 727.08688;
 
-    // hood regression stays the same
     public static double hoodA = -0.0000876693, hoodB = 0.0228448, hoodC = -0.779915;
     public static double timeA = 0.00002;
     public static double timeB = 0.004;
@@ -88,16 +87,16 @@ public class V2RED extends DbzOpMode {
 
     public static double vkDMax = 0.25;
 
-    public static double TV = 1550;
+    public static double TV = 0;
     public static double hoodServoPos = 0.5;
     public static double vkP = 5;
     public static double vkF = 1.2;
     public static double vkD = 0.0;
 
-    public static double threshold = 180;
+    public static double threshold = 220;
     public static double threshold2 = 180;
 
-    public static double turretZeroDeg = 319;
+    public static double turretZeroDeg = 323;
 
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
@@ -175,18 +174,14 @@ public class V2RED extends DbzOpMode {
     private boolean dipDone = false;
     private ElapsedTime dipTimer = new ElapsedTime();
 
-
     @Override
     public void opInit() {
-
-
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         holdServo = hardwareMap.get(Servo.class, "holdServo");
         hang1 = hardwareMap.get(Servo.class, "hang1");
         hang2 = hardwareMap.get(Servo.class, "hang2");
-
 
         light = hardwareMap.get(Servo.class, "light");
 
@@ -284,9 +279,9 @@ public class V2RED extends DbzOpMode {
         lastSnapButton = snap;
 
         follower.setTeleOpDrive(
-                gamepad1.left_stick_y,
-                gamepad1.left_stick_x,
-                gamepad1.right_stick_x,
+                -gamepad1.left_stick_y,
+                -gamepad1.left_stick_x,
+                -gamepad1.right_stick_x,
                 true
         );
 
@@ -364,7 +359,6 @@ public class V2RED extends DbzOpMode {
         boolean detected = dist < dthresh;
         boolean notdetected = dist >= dthresh;
 
-
         telemetryM.addData("Distance Voltage", String.format("%.3f", dist));
         telemetryM.addData("Ball Detected", detected ? "YES" : "NO");
         telemetryM.addData("Ball State", ballState.name());
@@ -372,12 +366,13 @@ public class V2RED extends DbzOpMode {
         switch (ballState) {
 
             case IDLE:
-                if (detected) {
+                if (detected && !shooting) {
                     if (!wasDetected) {
                         detectionTimer.reset();
                         wasDetected = true;
                     }
                     if (detectionTimer.seconds() >= timeeiieiu) {
+                        gamepad1.rumble(1000);
                         holdServo.setPosition(holdClosePos);
                         leftpushServo.setPosition(lock);
                         rightpushServo.setPosition(lock - servooffset);
@@ -387,7 +382,6 @@ public class V2RED extends DbzOpMode {
                         ballState = BallState.REVERSING;
                         wasDetected = false;
                     }
-
                 } else {
                     wasDetected = false;
                     threeBallsLocked = false;
@@ -396,54 +390,47 @@ public class V2RED extends DbzOpMode {
 
             case REVERSING:
 
-                holdServo.setPosition(holdClosePos);
-                if (!shooting && ballReverseTimer.seconds() < 1.0) {
+                if (!shooting && ballReverseTimer.seconds() < 2.0) {
+                    holdServo.setPosition(holdClosePos);
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
+                    intakeMotor.setPower(-1);
                 }
-                intakeMotor.setPower(-1);
+
 
                 if (ballReverseTimer.seconds() >= 1.0) {
                     intakeMotor.setPower(1);
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
+
+                    holdServo.setPosition(holdOpenPos);
                     ballState = BallState.LOCKED;
                 }
                 break;
 
             case LOCKED:
-
                 if (!shooting) {
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
                     intakeMotor.setPower(1);
                     wasDetected = false;
-
                 }
                 break;
         }
     }
 
-    // ===== CHANGE IS HERE =====
     private void applyHoodAndVelocityRegressions() {
         Pose poseNow = follower.getPose();
 
         if (autoHoodActive && poseNow != null) {
-
             Pose vGoal = updateGoalV2(poseNow);
             double vDist = Math.hypot(vGoal.getX() - poseNow.getX(), vGoal.getY() - poseNow.getY());
-
 
             double hoodPos = (hoodA * vDist * vDist) + (hoodB * vDist) + hoodC;
             hoodPos = Math.max(0.0, Math.min(1.0, hoodPos));
             baseHoodPos = hoodPos;
 
-
             double vel = (velA * vDist * vDist) + (velB * vDist) + velC;
-
             double maxVel = outtake2Motor.getMotorType().getMaxRPM()
                     * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
-
             vel = Math.max(-maxVel, Math.min(maxVel, vel));
             targetVelocity = vel;
 
@@ -488,7 +475,6 @@ public class V2RED extends DbzOpMode {
         double vx = (vel != null) ? vel.getXComponent() : 0.0;
         double vy = (vel != null) ? vel.getYComponent() : 0.0;
 
-
         double speed = Math.hypot(vx, vy);
         if (speed < 1.5) {
             vx = 0;
@@ -505,7 +491,6 @@ public class V2RED extends DbzOpMode {
     }
 
     private void shootFastOnly() {
-
         boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
         boolean fastshoot = moveshoot;
         if (!fastshoot) {
@@ -518,7 +503,6 @@ public class V2RED extends DbzOpMode {
                 threeBallsLocked = false;
                 holdOpened = false;
                 intaketimer.reset();
-
                 shooting = true;
             }
             if (shooting && intaketimer.milliseconds() > shotreturn) {
@@ -551,14 +535,10 @@ public class V2RED extends DbzOpMode {
                 dipDone = false;
             }
 
-
             if (shooting && intaketimer.milliseconds() > 700) {
-
                 leftpushServo.setPosition(Push0);
                 rightpushServo.setPosition(Push0 - servooffset);
-
                 holdServo.setPosition(holdClosePos);
-
                 shooting = false;
                 resetAfterShooting();
             }
@@ -571,7 +551,7 @@ public class V2RED extends DbzOpMode {
     private void resetAfterShooting() {
         threeBallsLocked = false;
         holdOpened = false;
-        ballState = BallState.IDLE;  // ADD
+        ballState = BallState.IDLE;
 
         holdServo.setPosition(holdClosePos);
         leftpushServo.setPosition(Push0);
@@ -634,7 +614,6 @@ public class V2RED extends DbzOpMode {
     }
 
     private void aim() {
-
         boolean leftTriggerPressed = dbzGamepad1.left_trigger > 0.1;
         if (leftTriggerPressed && !leftTriggerLast) {
             aimingActive = !aimingActive;
@@ -648,11 +627,9 @@ public class V2RED extends DbzOpMode {
             turretState = TurretState.NORMAL;
             targetAngleDeg = 0.0;
         } else {
-
             double desiredClamped = overshoot();
 
             switch (turretState) {
-
                 case NORMAL:
                     if (Math.abs(desiredClamped - getTurretAngleDeg()) <= threshold) {
                         targetAngleDeg = desiredClamped;
@@ -706,7 +683,6 @@ public class V2RED extends DbzOpMode {
     }
 
     private void runFlywheelVelocityControl() {
-
         flyTargetVelTelem = targetVelocity;
         flyCurrentVelTelem = outtake2Motor.getVelocity();
 
@@ -757,11 +733,10 @@ public class V2RED extends DbzOpMode {
         double voltage = turretEncoder.getVoltage();
         double angle = (voltage / turretEncoder.getMaxVoltage()) * 360.0;
         angle -= turretZeroDeg;
-        return angleWrap(angle);
+        return angleWrapAsym(angle, threshold);
     }
 
     private double getDesiredTurretAngleDeg() {
-
         Pose pose = follower.getPose();
         if (pose == null) return getTurretAngleDeg();
 
@@ -770,11 +745,11 @@ public class V2RED extends DbzOpMode {
         double fieldAngle = Math.atan2(vGoal.getY() - pose.getY(), vGoal.getX() - pose.getX());
         double turretAngleDeg = Math.toDegrees(fieldAngle - pose.getHeading()) + turretHeadingOffsetDeg;
 
-        return angleWrap(turretAngleDeg);
+        return angleWrapAsym(turretAngleDeg, threshold);
     }
 
     private double overshoot() {
-        double desired = angleWrap(getDesiredTurretAngleDeg());
+        double desired = angleWrapAsym(getDesiredTurretAngleDeg(), threshold);
         if (desired > threshold2) return threshold2;
         if (desired < -threshold) return -threshold;
         return desired;
@@ -784,8 +759,11 @@ public class V2RED extends DbzOpMode {
         return ((angle + 180) % 360 + 360) % 360 - 180;
     }
 
-    private void trySnapPoseFromLimelight() {
+    private double angleWrapAsym(double angle, double negLimit) {
+        return ((angle + negLimit) % 360 + 360) % 360 - negLimit;
+    }
 
+    private void trySnapPoseFromLimelight() {
         if (limelight == null) return;
 
         LLResult result = limelight.getLatestResult();
@@ -805,7 +783,6 @@ public class V2RED extends DbzOpMode {
     }
 
     private void sendGraphTelemetry() {
-
         telemetry.addData("Turret/TargetDeg", turretTargetDegTelem);
         telemetry.addData("Turret/CurrentDeg", turretCurrentDegTelem);
         telemetry.addData("Turret/ErrorDeg", angleWrap(turretTargetDegTelem - turretCurrentDegTelem));
