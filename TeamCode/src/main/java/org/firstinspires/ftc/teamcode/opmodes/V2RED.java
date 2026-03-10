@@ -56,20 +56,23 @@ public class V2RED extends DbzOpMode {
     private boolean threeBallsLocked = false;
     private boolean holdOpened = false;
 
-    public static double servooffset = 0.01;
+    public static double servooffset = 0.035;
 
-    public static double Push0 = 0.81;
-    public static double timeeiieiu = 0.4;
+    public static double Push0 = 0.85;
+    public static double timeeiieiu = 0.25;
     public static double Push1 = 0.67;
     public static double Push2 = 0.47;
     public static double Push3 = 0.22;
 
     public static double lock = 0.71;
 
-    public static double holdOpenPos = 0.75;
-    public static double holdClosePos = 0.75;
+    public static double holdOpenPos = 0.8;
+    public static double holdClosePos = 0.8;
 
-    public static double dthresh = 0.24;
+    public static double dthresh = 0.147;
+    public static double dthresh1 = 0.18;
+    public static double dthresh2  = 0.15;
+
 
     public static double hoodDipDuringShot = 0.015;
     public static double dipDelaySec = 0.5;
@@ -111,7 +114,7 @@ public class V2RED extends DbzOpMode {
     public static double turretFFDeadbandDeg = 0.0;
 
     public static double turretoffset = 3.0;
-    private AnalogInput distancez;
+    private AnalogInput distancez, distance1, distance2;
 
     private ElapsedTime velocityTimer = new ElapsedTime();
     private double lastVelErrorNorm = 0.0;
@@ -123,7 +126,7 @@ public class V2RED extends DbzOpMode {
     private VoltageSensor batteryVoltageSensor;
     private AnalogInput turretEncoder;
 
-    protected DistanceSensor sensor1, sensor2;
+    protected DistanceSensor sensor1, sensor2, sensor3;
 
     private boolean shootLast = false;
     private boolean shooting = false;
@@ -187,7 +190,9 @@ public class V2RED extends DbzOpMode {
 
         sensor1 = hardwareMap.get(DistanceSensor.class, "sensor1");
         sensor2 = hardwareMap.get(DistanceSensor.class, "sensor2");
-        distancez = hardwareMap.get(AnalogInput.class, "distance");
+        distancez = hardwareMap.get(AnalogInput.class, "distancez");
+        distance1 = hardwareMap.get(AnalogInput.class, "distance1");
+        distance2 = hardwareMap.get(AnalogInput.class, "distance2");
 
         baseHoodPos = hoodServoPos;
         hoodServo.setPosition(baseHoodPos);
@@ -356,22 +361,32 @@ public class V2RED extends DbzOpMode {
 
     private void checkThreeBallsAndLock() {
         double dist = distancez.getVoltage();
+        double dist1 = distance1.getVoltage();
+        double dist2 = distance2.getVoltage();
+
         boolean detected = dist < dthresh;
+        boolean detected1 = dist1 < dthresh1;
+        boolean detected2 = dist2 < dthresh2;
         boolean notdetected = dist >= dthresh;
 
         telemetryM.addData("Distance Voltage", String.format("%.3f", dist));
+        telemetryM.addData("Distance Voltage1", String.format("%.3f", dist1));
+        telemetryM.addData("Distance Voltage2", String.format("%.3f", dist2));
         telemetryM.addData("Ball Detected", detected ? "YES" : "NO");
+        telemetryM.addData("Ball Detected", detected1 ? "YES" : "NO");
+        telemetryM.addData("Ball Detected", detected2 ? "YES" : "NO");
         telemetryM.addData("Ball State", ballState.name());
 
         switch (ballState) {
 
             case IDLE:
-                if (detected && !shooting) {
+                if (detected && detected1 && detected2 && !shooting) {
                     if (!wasDetected) {
                         detectionTimer.reset();
+                        ballReverseTimer.reset();
                         wasDetected = true;
                     }
-                    if (detectionTimer.seconds() >= timeeiieiu) {
+//                    if (detectionTimer.seconds() >= timeeiieiu) {
                         gamepad1.rumble(1000);
                         holdServo.setPosition(holdClosePos);
                         leftpushServo.setPosition(lock);
@@ -381,16 +396,17 @@ public class V2RED extends DbzOpMode {
                         threeBallsLocked = true;
                         ballState = BallState.REVERSING;
                         wasDetected = false;
+//                    }
+                    } else {
+                        wasDetected = false;
+                        threeBallsLocked = false;
                     }
-                } else {
-                    wasDetected = false;
-                    threeBallsLocked = false;
-                }
+
                 break;
 
             case REVERSING:
 
-                if (!shooting && ballReverseTimer.seconds() < 2.0) {
+                if (!shooting && ballReverseTimer.seconds() < 1.0) {
                     holdServo.setPosition(holdClosePos);
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
