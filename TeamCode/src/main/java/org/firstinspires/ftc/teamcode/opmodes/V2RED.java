@@ -67,12 +67,11 @@ public class V2RED extends DbzOpMode {
     public static double lock = 0.71;
 
     public static double holdOpenPos = 0.8;
-    public static double holdClosePos = 0.8;
+    public static double holdClosePos = 0.467;
 
     public static double dthresh = 0.147;
     public static double dthresh1 = 0.18;
     public static double dthresh2  = 0.15;
-
 
     public static double hoodDipDuringShot = 0.015;
     public static double dipDelaySec = 0.5;
@@ -99,7 +98,7 @@ public class V2RED extends DbzOpMode {
     public static double threshold = 220;
     public static double threshold2 = 180;
 
-    public static double turretZeroDeg = 323;
+    public static double turretZeroDeg = 181;
 
     public static double turretKp = 0.02;
     public static double turretKi = 0.0;
@@ -177,6 +176,14 @@ public class V2RED extends DbzOpMode {
     private boolean dipDone = false;
     private ElapsedTime dipTimer = new ElapsedTime();
 
+    private double maxVel = 1900;
+    private boolean useRpmMaxVel = false;
+    private boolean lastDpadUpG1 = false;
+    private boolean lastDpadDownG1 = false;
+
+    private boolean lastDpadUpG2 = false;
+    private boolean lastDpadDownG2 = false;
+
     @Override
     public void opInit() {
         rightpushServo = hardwareMap.get(Servo.class, "rightpushServo");
@@ -232,6 +239,9 @@ public class V2RED extends DbzOpMode {
         lastVelTimeSec = velocityTimer.seconds();
         lastVelErrorNorm = 0.0;
 
+        maxVel = 1900;
+        useRpmMaxVel = false;
+
         PanelsConfigurables.INSTANCE.refreshClass(this);
 
         follower.update();
@@ -247,6 +257,7 @@ public class V2RED extends DbzOpMode {
     @Override
     public void opLoop() {
         updateLights();
+
         boolean shoottoggle = gamepad1.left_stick_button;
         if (shoottoggle && !lastshoot) {
             moveshoot = !moveshoot;
@@ -259,20 +270,40 @@ public class V2RED extends DbzOpMode {
         }
         lastAButton = aButton;
 
+        boolean dpadUpG1 = gamepad1.dpad_up;
+        boolean dpadDownG1 = gamepad1.dpad_down;
+
+        if (dpadUpG1 && !lastDpadUpG1) {
+            useRpmMaxVel = true;
+            maxVel = outtake2Motor.getMotorType().getMaxRPM()
+                    * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
+        }
+        if (dpadDownG1 && !lastDpadDownG1) {
+            useRpmMaxVel = false;
+            maxVel = 1900;
+        }
+
+        lastDpadUpG1 = dpadUpG1;
+        lastDpadDownG1 = dpadDownG1;
+
+        boolean dpadUpG2 = gamepad2.dpad_up;
+        boolean dpadDownG2 = gamepad2.dpad_down;
+
+        if (dpadUpG2 && !lastDpadUpG2) {
+            holdServo.setPosition(holdOpenPos);
+        }
+        if (dpadDownG2 && !lastDpadDownG2) {
+            holdServo.setPosition(holdClosePos);
+        }
+
+        lastDpadUpG2 = dpadUpG2;
+        lastDpadDownG2 = dpadDownG2;
+
         boolean rightStickPress = gamepad2.right_stick_button;
         boolean leftStickPress = gamepad2.left_stick_button;
 
         if (rightStickPress && !lastr1) turretHeadingOffsetDeg -= turretoffset;
         if (leftStickPress && !lastl1) turretHeadingOffsetDeg += turretoffset;
-
-        if (gamepad1.dpad_up) {
-            hang1.setPosition(hang);
-            hang2.setPosition(hang);
-        }
-        if (gamepad1.dpad_down) {
-            hang1.setPosition(hangdown);
-            hang2.setPosition(hangdown);
-        }
 
         lastr1 = rightStickPress;
         lastl1 = leftStickPress;
@@ -367,7 +398,6 @@ public class V2RED extends DbzOpMode {
         boolean detected = dist < dthresh;
         boolean detected1 = dist1 < dthresh1;
         boolean detected2 = dist2 < dthresh2;
-        boolean notdetected = dist >= dthresh;
 
         telemetryM.addData("Distance Voltage", String.format("%.3f", dist));
         telemetryM.addData("Distance Voltage1", String.format("%.3f", dist1));
@@ -386,26 +416,22 @@ public class V2RED extends DbzOpMode {
                         ballReverseTimer.reset();
                         wasDetected = true;
                     }
-//                    if (detectionTimer.seconds() >= timeeiieiu) {
-                        gamepad1.rumble(1000);
-                        holdServo.setPosition(holdClosePos);
-                        leftpushServo.setPosition(lock);
-                        rightpushServo.setPosition(lock - servooffset);
-                        intakeMotor.setPower(-1);
-                        ballReverseTimer.reset();
-                        threeBallsLocked = true;
-                        ballState = BallState.REVERSING;
-                        wasDetected = false;
-//                    }
-                    } else {
-                        wasDetected = false;
-                        threeBallsLocked = false;
-                    }
-
+                    gamepad1.rumble(1000);
+                    holdServo.setPosition(holdClosePos);
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                    intakeMotor.setPower(-1);
+                    ballReverseTimer.reset();
+                    threeBallsLocked = true;
+                    ballState = BallState.REVERSING;
+                    wasDetected = false;
+                } else {
+                    wasDetected = false;
+                    threeBallsLocked = false;
+                }
                 break;
 
             case REVERSING:
-
                 if (!shooting && ballReverseTimer.seconds() < 1.0) {
                     holdServo.setPosition(holdClosePos);
                     leftpushServo.setPosition(lock);
@@ -413,11 +439,8 @@ public class V2RED extends DbzOpMode {
                     intakeMotor.setPower(-1);
                 }
 
-
                 if (ballReverseTimer.seconds() >= 1.0) {
                     intakeMotor.setPower(1);
-
-                    holdServo.setPosition(holdOpenPos);
                     ballState = BallState.LOCKED;
                 }
                 break;
@@ -445,8 +468,6 @@ public class V2RED extends DbzOpMode {
             baseHoodPos = hoodPos;
 
             double vel = (velA * vDist * vDist) + (velB * vDist) + velC;
-            double maxVel = outtake2Motor.getMotorType().getMaxRPM()
-                    * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
             vel = Math.max(-maxVel, Math.min(maxVel, vel));
             targetVelocity = vel;
 
@@ -808,6 +829,9 @@ public class V2RED extends DbzOpMode {
         telemetry.addData("Flywheel/CurrentVel", flyCurrentVelTelem);
         telemetry.addData("Flywheel/VelError", flyTargetVelTelem - flyCurrentVelTelem);
         telemetry.addData("Flywheel/AtTarget", atWTarget);
+
+        telemetry.addData("MaxVel Mode", useRpmMaxVel ? "RPM" : "1900");
+        telemetry.addData("MaxVel", maxVel);
     }
 
     @Override
