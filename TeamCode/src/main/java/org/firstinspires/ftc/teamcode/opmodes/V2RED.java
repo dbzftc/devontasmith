@@ -186,7 +186,7 @@ public class V2RED extends DbzOpMode {
     private boolean dipDone = false;
     private ElapsedTime dipTimer = new ElapsedTime();
 
-    // --- 3-ball hold-then-push delay ---
+
     private ElapsedTime holdDelayTimer = new ElapsedTime();
     private boolean waitingForHold = false;
 
@@ -334,10 +334,12 @@ public class V2RED extends DbzOpMode {
         }
         lastSnapButton = snap;
 
+        double mult = gamepad1.left_trigger > 0.1 ? 0.3 : 1;
+
         follower.setTeleOpDrive(
-                -gamepad1.left_stick_y,
-                -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x,
+                -gamepad1.left_stick_y * mult,
+                -gamepad1.left_stick_x * mult,
+                -gamepad1.right_stick_x * mult,
                 true
         );
 

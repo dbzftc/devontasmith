@@ -39,7 +39,7 @@ public class nineplusten extends DbzOpMode {
     public static double holdClosePos = 0.467;
 
     public static double detectionDebounce = 0.5;
-    public static double intakeWaitTimeout = 0.9;
+    public static double intakeWaitTimeout = 0.7;
     public static double reversedebounce = 1.7;
     public static double lockdebounce = 1.4;
 
@@ -54,7 +54,7 @@ public class nineplusten extends DbzOpMode {
 
     public static double goalx = 143, goaly = 140;
 
-    public static double hoodDipDuringShot = 0.015;
+    public static double hoodDipDuringShot = 0;
     public static double dipDelaySec = 0.5;
     public static double dipDurationSec = 0.15;
 
@@ -91,7 +91,7 @@ public class nineplusten extends DbzOpMode {
     public static double threshold = 220;
     public static double threshold2 = 180;
 
-    public static double nearWallX = 128.373;
+    public static double nearWallX = 126.373;
     public static double nearWallY = 84.566;
 
     public static double lowWallX = 127.207;
@@ -122,67 +122,67 @@ public class nineplusten extends DbzOpMode {
 
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(111.417, 136.815), new Pose(95.149, 84.168)))
-                    .setLinearHeadingInterpolation(Math.toRadians(270), Math.toRadians(0)).build();
+                            new BezierLine(new Pose(111.417, 136.815), new Pose(98.149, 83.168)))
+                    .setTangentHeadingInterpolation() .build();
 
             Path2 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(95.149, 84.168), new Pose(99.885, 50.734), new Pose(127.544, 62.850)))
+                            new BezierCurve(new Pose(98.149, 83.168), new Pose(90, 55), new Pose(123.544, 58.950)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path3 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(127.544, 62.850), new Pose(99.704, 50.734), new Pose(95.149, 84.168)))
+                            new BezierCurve(new Pose(123.544, 58.950), new Pose(90, 55), new Pose(97.149, 77.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
-
             Path4 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(97.149, 77.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path5 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(97.149, 77.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(97.149, 77.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path7 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(97.149, 77.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             Path8 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(97.149, 77.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(97.149, 77.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             // 4th gate trip
             Path10 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(97.149, 77.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path11 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(97.149, 77.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             // Near wall finish
             Path12 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(95.149, 84.168), new Pose(nearWallX, nearWallY)))
+                            new BezierLine(new Pose(97.149, 77.168), new Pose(nearWallX, nearWallY)))
                     .setTangentHeadingInterpolation().build();
 
             Path13 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(nearWallX, nearWallY), new Pose(95.170, 110.914)))
+                            new BezierLine(new Pose(nearWallX, nearWallY), new Pose(100, 112)))
                     .setTangentHeadingInterpolation().setReversed().build();
         }
     }
 
-    protected Servo rightpushServo, leftpushServo, hoodServo, holdServo;
+    protected Servo rightpushServo, leftpushServo, hoodServo, holdServo, light;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
     private AnalogInput turretEncoder;
     private Follower follower;
     private Paths paths;
+
 
     private enum AutonState {
         followPath1, shoot1,
@@ -231,6 +231,7 @@ public class nineplusten extends DbzOpMode {
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         holdServo = hardwareMap.get(Servo.class, "holdServo");
+        light = hardwareMap.get(Servo.class, "light");
 
         distancez = hardwareMap.get(AnalogInput.class, "distancez");
         distance1 = hardwareMap.get(AnalogInput.class, "distance1");
@@ -302,7 +303,7 @@ public class nineplusten extends DbzOpMode {
             case followPath2:
 
                 if (!follower.isBusy()) {
-                    sleep(1100);
+                    //sleep(1100);
                     follower.followPath(paths.Path3, true);
                     autonState = AutonState.followPath3;
                 }
@@ -322,7 +323,7 @@ public class nineplusten extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
-                    follower.followPath(paths.Path4, true);
+                    follower.followPath(paths.Path4,true);
                     autonState = AutonState.followPath4;
                 }
                 break;
@@ -595,11 +596,12 @@ public class nineplusten extends DbzOpMode {
                         ballReverseTimer.reset();
                         ballState = BallState.reversing;
                         wasDetected = false;
+                        light.setPosition(0.722);
 
                     }
                 } else if (!detected) {
                     wasDetected = false;
-
+                    light.setPosition(0);
                 }
                 break;
 
@@ -790,12 +792,12 @@ public class nineplusten extends DbzOpMode {
 
     private double overshoot() {
         double rawAngle;
-        if (autonState == AutonState.shoot1 || autonState == AutonState.followPath1) {
-            rawAngle = 35;
+        if (autonState == AutonState.shoot1 || (autonState == AutonState.followPath1)) {
+            rawAngle = 160;
         } else if (autonState == AutonState.shoot13 || autonState == AutonState.followPath13) {
-            rawAngle = 68;
+            rawAngle = 73;
         } else {
-            rawAngle = 44;
+            rawAngle = 50;
         }
 
         double desired = angleWrapAsym(rawAngle, threshold);

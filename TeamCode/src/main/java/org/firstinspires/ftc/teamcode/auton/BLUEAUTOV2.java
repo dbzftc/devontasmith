@@ -13,9 +13,7 @@ import com.pedropathing.math.Vector;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -23,12 +21,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
-import org.firstinspires.ftc.teamcode.opmodes.V2RED;
 
 
 @Config
-@Autonomous(name = "BLUEAUTOv2")
-public class SCauto extends DbzOpMode {
+@Autonomous(name = "BLUEAUTOV2")
+public class BLUEAUTOV2 extends DbzOpMode {
 
 
     public static double servooffset = 0.01;
@@ -40,10 +37,10 @@ public class SCauto extends DbzOpMode {
 
     public static double lock = 0.71;
     public static double holdOpenPos = 0.8;
-    public static double holdClosePos = 0.8;
+    public static double holdClosePos = 0.467;
 
     public static double detectionDebounce = 0.5;
-    public static double intakeWaitTimeout = 0.35;
+    public static double intakeWaitTimeout = .7;
 
 
     public static double TV = 0;
@@ -59,7 +56,7 @@ public class SCauto extends DbzOpMode {
     public static double goalx = 143, goaly = 140;
 
 
-    public static double hoodDipDuringShot = 0.015;
+    public static double hoodDipDuringShot = 0;
     public static double dipDelaySec = 0.5;
     public static double dipDurationSec = 0.15;
 
@@ -77,10 +74,8 @@ public class SCauto extends DbzOpMode {
 
     public static double startX = 144-114.2417;
     public static double startY = 133.472;
-    public static double gatex = 144-145.1;
-    public static double gatey = 59.85;
-
-
+    public static double gatex = 144-147.1;
+    public static double gatey = 60.2;
     public static double gateh = 24;
 
 
@@ -156,125 +151,50 @@ public class SCauto extends DbzOpMode {
         public PathChain Path13;
 
 
+
+
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(144-111.417, 136.815),
-
-
-                                    new Pose(144-89.149, 84.168)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-270), Math.toRadians(180-0))
-
-
-                    .build();
-
+                            new BezierLine(new Pose(144-111.417, 136.815), new Pose(144-98.149, 83.168)))
+                    .setTangentHeadingInterpolation() .build();
 
             Path2 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-89.149, 84.168),
-                                    new Pose(144-99.885, 54.734),
-                                    new Pose(144-127.544, 59.850)
-                            )
-                    ) .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-0))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(144-98.149, 83.168), new Pose(144-99.885, 55), new Pose(144-131.544, 59.950)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-0)).build();
 
             Path3 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-127.544, 59.850),
-                                    new Pose(144-99.704, 54.734),
-                                    new Pose(144-89.149, 84.168)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-0))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(144-131.544, 59.950), new Pose(144-90, 55), new Pose(144-97.149, 77.168)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-0)).build();
 
             Path4 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-89.149, 84.168),
-                                    new Pose(144-110.990, 60.361),
-
-
-                                    new Pose(gatex, gatey)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(144-97.149, 77.168), new Pose(144-110.990, 60.361), new Pose(gatex, gatey)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh)).build();
 
             Path5 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(gatex, gatey),
-                                    new Pose(144-110.990, 60.361),
-
-
-                                    new Pose(8144-9.149, 84.168)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(144-110.990, 60.361), new Pose(144-97.149, 77.168)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-89.149, 84.168),
-                                    new Pose(144-110.990, 60.361),
-
-
-                                    new Pose(gatex, gatey)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(144-97.149, 77.168), new Pose(144-110.990, 60.361), new Pose(gatex, gatey)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh)).build();
 
             Path7 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(gatex, gatey),
-                                    new Pose(144-110.990, 60.361),
-                                    new Pose(144-89.149, 84.168)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(144-110.990, 60.361), new Pose(144-97.149, 77.168)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0)).build();
 
             Path8 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-89.149, 84.168),
-                                    new Pose(144-110.990, 60.361),
-                                    new Pose(gatex, gatey)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh))
-
-
-                    .build();
-
+                            new BezierCurve(new Pose(144-97.149, 77.168), new Pose(144-110.990, 60.361), new Pose(gatex, gatey)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-0), Math.toRadians(180-gateh)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(gatex, gatey),
-                                    new Pose(144-110.990, 60.361),
-                                    new Pose(144-89.149, 84.168)
-                            )
-                    ).setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(144-110.990, 60.361), new Pose(144-97.149, 84.566)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-gateh), Math.toRadians(180-0)).build();
 
-
-                    .build();
 
 
             Path10 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(144-89.149, 84.168),
+                                    new Pose(144-97.149, 84.566),
 
 
 
@@ -292,7 +212,7 @@ public class SCauto extends DbzOpMode {
                                     new Pose(144-128.573, 84.566),
 
 
-                                    new Pose(144-89.149, 84.168)
+                                    new Pose(144-95.149, 84.168)
                             )
                     ).setTangentHeadingInterpolation()
                     .setReversed()
@@ -300,10 +220,10 @@ public class SCauto extends DbzOpMode {
 
 
             Path12 = follower.pathBuilder().addPath(
-                            new BezierCurve(
-                                    new Pose(144-89.149, 84.168),
-                                    new Pose(144-89.091, 30.918),
-                                    new Pose(144-127.207, 35.159)
+                            new BezierLine(
+                                    new Pose(144-85.149, 84.168),
+                                    //      new Pose(112.11645932415522, 32.77986983729663),
+                                    new Pose(144-136.4305381727159, 11.71464330413016)
                             )
                     ).setTangentHeadingInterpolation()
 
@@ -316,7 +236,7 @@ public class SCauto extends DbzOpMode {
                                     new Pose(144-127.207, 35.159),
 
 
-                                    new Pose(144-89.070, 110.914)
+                                    new Pose(144-96, 112)
                             )
                     ).setTangentHeadingInterpolation()
                     .setReversed()
@@ -331,13 +251,16 @@ public class SCauto extends DbzOpMode {
 
 
 
-    protected Servo rightpushServo, leftpushServo, hoodServo, holdServo;
+    protected Servo rightpushServo, leftpushServo, hoodServo, holdServo, light;;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
     private AnalogInput turretEncoder;
 
 
     private Follower follower;
+
+    public static double reversedebounce = 1.7;
+    public static double lockdebounce = 1.4;
     private Paths paths;
 
 
@@ -395,9 +318,13 @@ public class SCauto extends DbzOpMode {
         leftpushServo = hardwareMap.get(Servo.class, "leftpushServo");
         hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         holdServo = hardwareMap.get(Servo.class, "holdServo");
+        light = hardwareMap.get(Servo.class, "light");
+
 
 
         distancez = hardwareMap.get(AnalogInput.class, "distancez");
+        distance1 = hardwareMap.get(AnalogInput.class, "distance1");
+        distance2 = hardwareMap.get(AnalogInput.class, "distance2");
         turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
 
@@ -422,7 +349,7 @@ public class SCauto extends DbzOpMode {
 
 
         hoodServo.setPosition(hoodServoPos);
-        holdServo.setPosition(holdClosePos);
+        holdServo.setPosition(holdOpenPos);
         leftpushServo.setPosition(lock);
         rightpushServo.setPosition(lock - servooffset);
 
@@ -456,6 +383,7 @@ public class SCauto extends DbzOpMode {
         dipshot();
 
 
+
         switch (autonState) {
 
 
@@ -478,20 +406,25 @@ public class SCauto extends DbzOpMode {
                     endShoot();
                     follower.followPath(paths.Path2, true);
                     autonState = AutonState.followPath2;
+
                 }
                 break;
 
 
             case followPath2:
+
+                holdServo.setPosition(holdClosePos);
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path3, true);
                     intakeMotor.setPower(1);
+
                     autonState = AutonState.followPath3;
                 }
                 break;
 
 
             case followPath3:
+                holdServo.setPosition(holdOpenPos);
                 if (!follower.isBusy()) {
                     intakeMotor.setPower(1);
                     startShoot();
@@ -507,6 +440,7 @@ public class SCauto extends DbzOpMode {
                     intakeMotor.setPower(1);
                     follower.followPath(paths.Path4, true);
                     autonState = AutonState.followPath4;
+
                 }
                 break;
 
@@ -514,29 +448,42 @@ public class SCauto extends DbzOpMode {
             case followPath4:
                 intakeMotor.setPower(1);
                 runBallDetection();
+                holdServo.setPosition(holdClosePos);
                 if (!follower.isBusy()) {
                     stateTimer.reset();
                     autonState = AutonState.intakeWait1;
+
                 }
                 break;
 
 
             case intakeWait1:
                 runBallDetection();
-                if (ballState == BallState.locked || stateTimer.seconds() >= 0.2) {
+                if (ballState == BallState.reversing || stateTimer.seconds() >= 0.2) {
                     ballState = BallState.idle;
                     wasDetected = false;
                     follower.followPath(paths.Path5, true);
+
                     autonState = AutonState.followPath5;
                 }
                 break;
 
 
             case followPath5:
+
+                if(stateTimer.seconds()>0.4){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                    holdServo.setPosition(holdOpenPos);
+                }
+                if (stateTimer.seconds() >= 0.8) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+
                     stateTimer.reset();
-                    autonState = AutonState.shoot5;
+                    autonState = BLUEAUTOV2.AutonState.shoot5;
                 }
                 break;
 
@@ -545,6 +492,7 @@ public class SCauto extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+
                     follower.followPath(paths.Path6, true);
                     autonState = AutonState.followPath6;
                 }
@@ -553,6 +501,7 @@ public class SCauto extends DbzOpMode {
 
             case followPath6:
                 intakeMotor.setPower(1);
+                holdServo.setPosition(holdClosePos);
                 runBallDetection();
                 if (!follower.isBusy()) {
                     stateTimer.reset();
@@ -563,20 +512,30 @@ public class SCauto extends DbzOpMode {
 
             case intakeWait2:
                 runBallDetection();
-                if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
+                if (ballState == BallState.reversing || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
                     wasDetected = false;
                     follower.followPath(paths.Path7, true);
+
                     autonState = AutonState.followPath7;
                 }
                 break;
 
 
             case followPath7:
+                holdServo.setPosition(holdOpenPos);
+                if(stateTimer.seconds()> lockdebounce){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= reversedebounce) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+                    intakeMotor.setPower(1);
                     stateTimer.reset();
-                    autonState = AutonState.shoot7;
+                    autonState = BLUEAUTOV2.AutonState.shoot7;
                 }
                 break;
 
@@ -585,6 +544,8 @@ public class SCauto extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+
+
                     follower.followPath(paths.Path8, true);
                     autonState = AutonState.followPath8;
                 }
@@ -593,6 +554,7 @@ public class SCauto extends DbzOpMode {
 
             case followPath8:
                 intakeMotor.setPower(1);
+                holdServo.setPosition(holdClosePos);
                 runBallDetection();
                 if (!follower.isBusy()) {
                     stateTimer.reset();
@@ -603,9 +565,10 @@ public class SCauto extends DbzOpMode {
 
             case intakeWait3:
                 runBallDetection();
-                if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
+                if (ballState == BallState.reversing || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
                     wasDetected = false;
+
                     follower.followPath(paths.Path9, true);
                     autonState = AutonState.followPath9;
                 }
@@ -613,15 +576,26 @@ public class SCauto extends DbzOpMode {
 
 
             case followPath9:
+                holdServo.setPosition(holdOpenPos);
+                if(stateTimer.seconds()> lockdebounce){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= reversedebounce) {
+                    intakeMotor.setPower(-1);
+                    ;
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+                    intakeMotor.setPower(1);
                     stateTimer.reset();
-                    autonState = AutonState.shoot9;
+                    autonState = BLUEAUTOV2.AutonState.shoot9;
                 }
                 break;
 
 
             case shoot9:
+                runBallDetection();
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     follower.followPath(paths.Path10, true);
@@ -631,14 +605,18 @@ public class SCauto extends DbzOpMode {
 
 
             case followPath10:
+                intakeMotor.setPower(1);
+                holdServo.setPosition(holdClosePos);
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path11, true);
+                    stateTimer.reset();
                     autonState = AutonState.followPath11;
                 }
                 break;
 
 
             case followPath11:
+                holdServo.setPosition(holdOpenPos);
                 if (!follower.isBusy()) {
                     startShoot();
                     stateTimer.reset();
@@ -665,6 +643,7 @@ public class SCauto extends DbzOpMode {
 
 
             case followPath13:
+                holdServo.setPosition(holdOpenPos);
                 if (!follower.isBusy()) {
                     startShoot();
                     stateTimer.reset();
@@ -731,22 +710,24 @@ public class SCauto extends DbzOpMode {
                         ballReverseTimer.reset();
                         ballState = BallState.reversing;
                         wasDetected = false;
+                        light.setPosition(0.722);
 
                     }
                 } else if (!detected) {
                     wasDetected = false;
+                    light.setPosition(0);
 
                 }
                 break;
 
             case reversing:
-                holdServo.setPosition(holdClosePos);
-                if (!shooting && ballReverseTimer.seconds() < 3.0) {
+
+                if (!shooting && ballReverseTimer.seconds() < 2.0) {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                     intakeMotor.setPower(-1);
                 }
-                if (ballReverseTimer.seconds() >= 3.0) {
+                if (ballReverseTimer.seconds() >= 2.0) {
                     intakeMotor.setPower(1);
                     leftpushServo.setPosition(Push0);
                     rightpushServo.setPosition(Push0 - servooffset);
@@ -766,7 +747,7 @@ public class SCauto extends DbzOpMode {
 
 
     private void startShoot() {
-        holdServo.setPosition(holdOpenPos);
+
         leftpushServo.setPosition(Push3);
         rightpushServo.setPosition(Push3 - servooffset);
         shooting = true;
@@ -778,7 +759,7 @@ public class SCauto extends DbzOpMode {
     private void endShoot() {
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
-        holdServo.setPosition(holdClosePos);
+
         shooting = false;
         ballState = BallState.idle;
         wasDetected = false;
@@ -795,12 +776,16 @@ public class SCauto extends DbzOpMode {
         Pose vGoal = updateGoalV2(poseNow);
         double dist = Math.hypot(vGoal.getX() - poseNow.getX(), vGoal.getY() - poseNow.getY());
 
+        double hoodPos = 0.46;
+        double vel = 1520;
 
-        double hoodPos = (hoodA * dist * dist) + (hoodB * dist) + hoodC;
-        baseHoodPos = Math.max(0.0, Math.min(1.0, hoodPos));
-
-
-        double vel = (velA * dist * dist) + (velB * dist) + velC;
+        if (autonState == BLUEAUTOV2.AutonState.shoot13 || autonState == BLUEAUTOV2.AutonState.followPath13) {
+            hoodPos = 0.25;
+            vel = 1400;
+        } else {
+            hoodPos = 0.46;
+            vel = 1520;
+        }
         double maxVel = outtake2Motor.getMotorType().getMaxRPM()
                 * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
         targetVelocity = Math.max(-maxVel, Math.min(maxVel, vel));
@@ -956,21 +941,19 @@ public class SCauto extends DbzOpMode {
 
     private double overshoot() {
         double rawAngle;
-        if (autonState == AutonState.shoot1 || autonState == AutonState.followPath1 ) {
-            rawAngle = 40;
-        } else if (autonState == AutonState.shoot13 || (autonState == AutonState.followPath13)) {
-            rawAngle = 90;
+        if (autonState == BLUEAUTOV2.AutonState.shoot1 || (autonState == BLUEAUTOV2.AutonState.followPath1)) {
+            rawAngle = 160;
+        } else if (autonState == BLUEAUTOV2.AutonState.shoot13 || autonState == BLUEAUTOV2.AutonState.followPath13) {
+            rawAngle = 95;
         } else {
-            rawAngle = 44;
+            rawAngle = 53;
         }
-
 
         double desired = angleWrapAsym(rawAngle, threshold);
         if (desired > threshold2) return threshold2;
         if (desired < -threshold) return -threshold;
         return desired;
     }
-
 
     private double angleWrap(double angle) {
         return ((angle + 180) % 360 + 360) % 360 - 180;
