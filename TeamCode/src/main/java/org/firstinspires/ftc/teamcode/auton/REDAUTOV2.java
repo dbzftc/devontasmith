@@ -41,7 +41,7 @@ public class REDAUTOV2 extends DbzOpMode {
     public static double lock = 0.71;
     public static double holdOpenPos = 0.8;
     public static double holdClosePos = 0.8;
-    public static double dthresh = 0.24;
+
     public static double detectionDebounce = 0.5;
     public static double intakeWaitTimeout = 0.35;
 
@@ -110,6 +110,18 @@ public class REDAUTOV2 extends DbzOpMode {
 
     public static double threshold = 220;
     public static double threshold2 = 180;
+
+    public static double dthresh = 0.157;
+    public static double dthresh1 = 0.173;
+    public static double dthresh2  = 0.155;
+
+    private AnalogInput distancez, distance1, distance2;
+
+    private ElapsedTime sensorTimer0 = new ElapsedTime();
+    private ElapsedTime sensorTimer1 = new ElapsedTime();
+    private ElapsedTime sensorTimer2 = new ElapsedTime();
+    private boolean latch0 = false, latch1 = false, latch2 = false;
+
 
 
     public static double nearWallX = 124.573;
@@ -322,7 +334,7 @@ public class REDAUTOV2 extends DbzOpMode {
     protected Servo rightpushServo, leftpushServo, hoodServo, holdServo;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
-    private AnalogInput turretEncoder, distancez;
+    private AnalogInput turretEncoder;
 
 
     private Follower follower;
@@ -346,6 +358,7 @@ public class REDAUTOV2 extends DbzOpMode {
         done
     }
     private AutonState autonState = AutonState.followPath1;
+    public static double stickypicky = 0.15;
 
 
     private enum BallState { idle, reversing, locked }
@@ -688,40 +701,52 @@ public class REDAUTOV2 extends DbzOpMode {
 
 
     private void runBallDetection() {
-        double dist = distancez.getVoltage();
-        boolean detected = dist < dthresh;
+        double dist  = distancez.getVoltage();
+        double dist1 = distance1.getVoltage();
+        double dist2 = distance2.getVoltage();
 
+        if (dist  < dthresh)  { latch0 = true; sensorTimer0.reset(); }
+        if (dist1 < dthresh1) { latch1 = true; sensorTimer1.reset(); }
+        if (dist2 < dthresh2) { latch2 = true; sensorTimer2.reset(); }
+
+        if (sensorTimer0.seconds() > stickypicky) latch0 = false;
+        if (sensorTimer1.seconds() > stickypicky) latch1 = false;
+        if (sensorTimer2.seconds() > stickypicky) latch2 = false;
+
+        boolean detected = latch0 && latch1 && latch2;
 
         switch (ballState) {
             case idle:
-                if (detected) {
+                if (detected && !shooting) {
                     if (!wasDetected) {
                         detectionTimer.reset();
                         wasDetected = true;
                     }
-                    if (detectionTimer.seconds() >= 0.36) {
-                        holdServo.setPosition(holdClosePos);
+                    if (detectionTimer.seconds() >= 0.2) {
+                        latch0 = false; latch1 = false; latch2 = false;
+
                         leftpushServo.setPosition(lock);
                         rightpushServo.setPosition(lock - servooffset);
                         intakeMotor.setPower(-1);
                         ballReverseTimer.reset();
                         ballState = BallState.reversing;
                         wasDetected = false;
+
                     }
-                } else {
+                } else if (!detected) {
                     wasDetected = false;
+
                 }
                 break;
 
-
             case reversing:
                 holdServo.setPosition(holdClosePos);
-                if (!shooting && ballReverseTimer.seconds() < 1.0) {
+                if (!shooting && ballReverseTimer.seconds() < 3.0) {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
+                    intakeMotor.setPower(-1);
                 }
-                intakeMotor.setPower(-1);
-                if (ballReverseTimer.seconds() >= 1.0) {
+                if (ballReverseTimer.seconds() >= 3.0) {
                     intakeMotor.setPower(1);
                     leftpushServo.setPosition(Push0);
                     rightpushServo.setPosition(Push0 - servooffset);
@@ -729,13 +754,11 @@ public class REDAUTOV2 extends DbzOpMode {
                 }
                 break;
 
-
             case locked:
+                leftpushServo.setPosition(lock);
+                rightpushServo.setPosition(lock - servooffset);
                 if (!shooting) {
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
                     intakeMotor.setPower(1);
-                    wasDetected = false;
                 }
                 break;
         }
@@ -963,6 +986,8 @@ public class REDAUTOV2 extends DbzOpMode {
 
 
     @Override
-    public void opTeardown() {}
+    public void opTeardown() {
+        org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose = follower.getPose();
+    }
 }
 

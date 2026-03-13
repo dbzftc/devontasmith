@@ -37,9 +37,12 @@ public class nineplusten extends DbzOpMode {
     public static double lock = 0.71;
     public static double holdOpenPos = 0.8;
     public static double holdClosePos = 0.467;
-    public static double dthresh = 0.24;
+
     public static double detectionDebounce = 0.5;
     public static double intakeWaitTimeout = 0.9;
+    public static double reversedebounce = 1.7;
+    public static double lockdebounce = 1.4;
+
 
     public static double TV = 0;
     public static double hoodServoPos = 0.5;
@@ -96,6 +99,19 @@ public class nineplusten extends DbzOpMode {
     public static double lowWallCx = 89.091;
     public static double lowWallCy = 30.918;
 
+    public static double dthresh = 0.157;
+    public static double dthresh1 = 0.173;
+    public static double dthresh2  = 0.155;
+
+    private AnalogInput distancez, distance1, distance2;
+
+    private ElapsedTime sensorTimer0 = new ElapsedTime();
+    private ElapsedTime sensorTimer1 = new ElapsedTime();
+    private ElapsedTime sensorTimer2 = new ElapsedTime();
+    private boolean latch0 = false, latch1 = false, latch2 = false;
+
+
+
     public static double finalX = 89.070;
     public static double finalY = 110.914;
 
@@ -106,57 +122,57 @@ public class nineplusten extends DbzOpMode {
 
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(111.417, 136.815), new Pose(89.149, 84.168)))
+                            new BezierLine(new Pose(111.417, 136.815), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(270), Math.toRadians(0)).build();
 
             Path2 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(89.149, 84.168), new Pose(99.885, 54.734), new Pose(127.544, 62.850)))
+                            new BezierCurve(new Pose(95.149, 84.168), new Pose(99.885, 50.734), new Pose(127.544, 62.850)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path3 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(127.544, 62.850), new Pose(99.704, 54.734), new Pose(89.149, 84.168)))
+                            new BezierCurve(new Pose(127.544, 62.850), new Pose(99.704, 50.734), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
 
             Path4 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(89.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path5 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(89.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             Path6 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(89.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path7 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(89.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             Path8 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(89.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path9 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(89.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             // 4th gate trip
             Path10 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(89.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
+                            new BezierCurve(new Pose(95.149, 84.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
                     .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(gateh)).build();
 
             Path11 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(89.149, 84.168)))
+                            new BezierCurve(new Pose(gatex, gatey), new Pose(110.990, 60.361), new Pose(95.149, 84.168)))
                     .setLinearHeadingInterpolation(Math.toRadians(gateh), Math.toRadians(0)).build();
 
             // Near wall finish
             Path12 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(89.149, 84.168), new Pose(nearWallX, nearWallY)))
+                            new BezierLine(new Pose(95.149, 84.168), new Pose(nearWallX, nearWallY)))
                     .setTangentHeadingInterpolation().build();
 
             Path13 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(nearWallX, nearWallY), new Pose(89.070, 110.914)))
+                            new BezierLine(new Pose(nearWallX, nearWallY), new Pose(95.170, 110.914)))
                     .setTangentHeadingInterpolation().setReversed().build();
         }
     }
@@ -164,7 +180,7 @@ public class nineplusten extends DbzOpMode {
     protected Servo rightpushServo, leftpushServo, hoodServo, holdServo;
     protected DcMotorEx intakeMotor, turret, outtake1Motor, outtake2Motor;
     private VoltageSensor batteryVoltageSensor;
-    private AnalogInput turretEncoder, distancez;
+    private AnalogInput turretEncoder;
     private Follower follower;
     private Paths paths;
 
@@ -186,8 +202,12 @@ public class nineplusten extends DbzOpMode {
     }
     private AutonState autonState = AutonState.followPath1;
 
+    public static double stickypicky = 0.15;
+
     private enum BallState { idle, reversing, locked }
     private BallState ballState = BallState.idle;
+
+
 
     private ElapsedTime stateTimer = new ElapsedTime();
     private ElapsedTime ballReverseTimer = new ElapsedTime();
@@ -213,6 +233,8 @@ public class nineplusten extends DbzOpMode {
         holdServo = hardwareMap.get(Servo.class, "holdServo");
 
         distancez = hardwareMap.get(AnalogInput.class, "distancez");
+        distance1 = hardwareMap.get(AnalogInput.class, "distance1");
+        distance2 = hardwareMap.get(AnalogInput.class, "distance2");
         turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
         intakeMotor = robot.intakeMotor;
@@ -273,13 +295,15 @@ public class nineplusten extends DbzOpMode {
                     endShoot();
                     follower.followPath(paths.Path2, true);
                     autonState = AutonState.followPath2;
+
                 }
                 break;
 
             case followPath2:
+
                 if (!follower.isBusy()) {
+                    sleep(1100);
                     follower.followPath(paths.Path3, true);
-                    intakeMotor.setPower(1);
                     autonState = AutonState.followPath3;
                 }
                 break;
@@ -309,22 +333,34 @@ public class nineplusten extends DbzOpMode {
                 if (!follower.isBusy()) {
                     stateTimer.reset();
                     autonState = AutonState.intakeWait1;
+                    holdServo.setPosition(holdClosePos);
                 }
                 break;
 
             case intakeWait1:
                 runBallDetection();
+
                 if (ballState == BallState.locked || stateTimer.seconds() >= 0.4) {
                     ballState = BallState.idle;
                     wasDetected = false;
+
                     follower.followPath(paths.Path5, true);
+                    holdServo.setPosition(holdOpenPos);
                     autonState = AutonState.followPath5;
                 }
                 break;
 
             case followPath5:
+                if(stateTimer.seconds()>0.4){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= 0.8) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+
                     stateTimer.reset();
                     autonState = AutonState.shoot5;
                 }
@@ -334,6 +370,7 @@ public class nineplusten extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+                    holdServo.setPosition(holdClosePos);
                     follower.followPath(paths.Path6, true);
                     autonState = AutonState.followPath6;
                 }
@@ -344,23 +381,35 @@ public class nineplusten extends DbzOpMode {
                 runBallDetection();
                 if (!follower.isBusy()) {
                     stateTimer.reset();
+
                     autonState = AutonState.intakeWait2;
                 }
                 break;
 
             case intakeWait2:
                 runBallDetection();
+
                 if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
+
                     wasDetected = false;
                     follower.followPath(paths.Path7, true);
+                    holdServo.setPosition(holdOpenPos);
                     autonState = AutonState.followPath7;
                 }
                 break;
 
             case followPath7:
+                if(stateTimer.seconds()> lockdebounce){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= reversedebounce) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+                    intakeMotor.setPower(1);
                     stateTimer.reset();
                     autonState = AutonState.shoot7;
                 }
@@ -370,6 +419,7 @@ public class nineplusten extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+                    holdServo.setPosition(holdClosePos);
                     follower.followPath(paths.Path8, true);
                     autonState = AutonState.followPath8;
                 }
@@ -386,17 +436,28 @@ public class nineplusten extends DbzOpMode {
 
             case intakeWait3:
                 runBallDetection();
+
                 if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
                     wasDetected = false;
+
+                    holdServo.setPosition(holdOpenPos);
                     follower.followPath(paths.Path9, true);
                     autonState = AutonState.followPath9;
                 }
                 break;
 
             case followPath9:
+                if(stateTimer.seconds()> lockdebounce){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= reversedebounce) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+                    intakeMotor.setPower(1);
                     stateTimer.reset();
                     autonState = AutonState.shoot9;
                 }
@@ -406,6 +467,7 @@ public class nineplusten extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+                    holdServo.setPosition(holdClosePos);
                     follower.followPath(paths.Path10, true);
                     autonState = AutonState.followPath10;
                 }
@@ -425,14 +487,25 @@ public class nineplusten extends DbzOpMode {
                 if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
                     wasDetected = false;
+
+                    holdServo.setPosition(holdOpenPos);
                     follower.followPath(paths.Path11, true);
                     autonState = AutonState.followPath11;
                 }
                 break;
 
             case followPath11:
+                if(stateTimer.seconds()> lockdebounce){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= reversedebounce) {
+                    intakeMotor.setPower(-1);
+                }
                 if (!follower.isBusy()) {
                     startShoot();
+                    intakeMotor.setPower(1);
+
                     stateTimer.reset();
                     autonState = AutonState.shoot11;
                 }
@@ -442,6 +515,7 @@ public class nineplusten extends DbzOpMode {
                 if (stateTimer.seconds() >= 0.4) {
                     endShoot();
                     intakeMotor.setPower(1);
+                    holdServo.setPosition(holdClosePos);
                     follower.followPath(paths.Path12, true);
                     autonState = AutonState.followPath12;
                 }
@@ -452,6 +526,7 @@ public class nineplusten extends DbzOpMode {
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path13, true);
                     autonState = AutonState.followPath13;
+                    holdServo.setPosition(holdOpenPos);
                 }
                 break;
 
@@ -488,39 +563,54 @@ public class nineplusten extends DbzOpMode {
         telemetry.update();
     }
 
+
     private void runBallDetection() {
-        double dist = distancez.getVoltage();
-        boolean detected = dist < dthresh;
+        double dist  = distancez.getVoltage();
+        double dist1 = distance1.getVoltage();
+        double dist2 = distance2.getVoltage();
+
+        if (dist  < dthresh)  { latch0 = true; sensorTimer0.reset(); }
+        if (dist1 < dthresh1) { latch1 = true; sensorTimer1.reset(); }
+        if (dist2 < dthresh2) { latch2 = true; sensorTimer2.reset(); }
+
+        if (sensorTimer0.seconds() > stickypicky) latch0 = false;
+        if (sensorTimer1.seconds() > stickypicky) latch1 = false;
+        if (sensorTimer2.seconds() > stickypicky) latch2 = false;
+
+        boolean detected = latch0 && latch1 && latch2;
 
         switch (ballState) {
             case idle:
-                if (detected) {
+                if (detected && !shooting) {
                     if (!wasDetected) {
                         detectionTimer.reset();
                         wasDetected = true;
                     }
-                    if (detectionTimer.seconds() >= 0.36) {
-                        holdServo.setPosition(holdClosePos);
+                    if (detectionTimer.seconds() >= 0.2) {
+                        latch0 = false; latch1 = false; latch2 = false;
+
                         leftpushServo.setPosition(lock);
                         rightpushServo.setPosition(lock - servooffset);
                         intakeMotor.setPower(-1);
                         ballReverseTimer.reset();
                         ballState = BallState.reversing;
                         wasDetected = false;
+
                     }
-                } else {
+                } else if (!detected) {
                     wasDetected = false;
+
                 }
                 break;
 
             case reversing:
                 holdServo.setPosition(holdClosePos);
-                if (!shooting && ballReverseTimer.seconds() < 1.0) {
+                if (!shooting && ballReverseTimer.seconds() < 3.0) {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
+                    intakeMotor.setPower(-1);
                 }
-                intakeMotor.setPower(-1);
-                if (ballReverseTimer.seconds() >= 1.0) {
+                if (ballReverseTimer.seconds() >= 3.0) {
                     intakeMotor.setPower(1);
                     leftpushServo.setPosition(Push0);
                     rightpushServo.setPosition(Push0 - servooffset);
@@ -529,18 +619,17 @@ public class nineplusten extends DbzOpMode {
                 break;
 
             case locked:
+                leftpushServo.setPosition(lock);
+                rightpushServo.setPosition(lock - servooffset);
                 if (!shooting) {
-                    leftpushServo.setPosition(Push0);
-                    rightpushServo.setPosition(Push0 - servooffset);
                     intakeMotor.setPower(1);
-                    wasDetected = false;
                 }
                 break;
         }
     }
 
     private void startShoot() {
-        holdServo.setPosition(holdOpenPos);
+
         leftpushServo.setPosition(Push3);
         rightpushServo.setPosition(Push3 - servooffset);
         shooting = true;
@@ -566,11 +655,20 @@ public class nineplusten extends DbzOpMode {
         }
         Pose vGoal = updateGoalV2(poseNow);
         double dist = Math.hypot(vGoal.getX() - poseNow.getX(), vGoal.getY() - poseNow.getY());
+        double hoodPos = 0.46;
+        double vel = 1520;
 
-        double hoodPos = (hoodA * dist * dist) + (hoodB * dist) + hoodC;
+       if (autonState == AutonState.shoot13 || autonState == AutonState.followPath13) {
+            hoodPos = 0.25;
+            vel = 1400;
+       } else {
+             hoodPos = 0.46;
+             vel = 1520;
+        }
+
+
         baseHoodPos = Math.max(0.0, Math.min(1.0, hoodPos));
 
-        double vel = (velA * dist * dist) + (velB * dist) + velC;
         double maxVel = outtake2Motor.getMotorType().getMaxRPM()
                 * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
         targetVelocity = Math.max(-maxVel, Math.min(maxVel, vel));
@@ -693,9 +791,9 @@ public class nineplusten extends DbzOpMode {
     private double overshoot() {
         double rawAngle;
         if (autonState == AutonState.shoot1 || autonState == AutonState.followPath1) {
-            rawAngle = 40;
+            rawAngle = 35;
         } else if (autonState == AutonState.shoot13 || autonState == AutonState.followPath13) {
-            rawAngle = 80;
+            rawAngle = 68;
         } else {
             rawAngle = 44;
         }
@@ -717,5 +815,7 @@ public class nineplusten extends DbzOpMode {
     @Override public void opLoopHook() {}
 
     @Override
-    public void opTeardown() {}
+    public void opTeardown() {
+        org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose = follower.getPose();
+    }
 }

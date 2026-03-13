@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -52,6 +53,7 @@ public class V2RED extends DbzOpMode {
     public static double shot1 = 300;
     public static double shot2 = 600;
     public static double shotreturn = 1000;
+    public static double intakecurrentthresh = 8.5;
 
     private boolean threeBallsLocked = false;
     private boolean holdOpened = false;
@@ -66,14 +68,16 @@ public class V2RED extends DbzOpMode {
 
     public static double lock = 0.71;
 
+    public static double sensorStickyWindow = 0.15;
+
     public static double holdOpenPos = 0.8;
     public static double holdClosePos = 0.467;
 
-    public static double dthresh = 0.147;
-    public static double dthresh1 = 0.18;
-    public static double dthresh2  = 0.15;
+    public static double dthresh = 0.157;
+    public static double dthresh1 = 0.173;
+    public static double dthresh2  = 0.155;
 
-    public static double hoodDipDuringShot = 0.015;
+    public static double hoodDipDuringShot = 0.0;
     public static double dipDelaySec = 0.5;
     public static double dipDurationSec = 0.15;
 
@@ -150,6 +154,12 @@ public class V2RED extends DbzOpMode {
     private double turretHeadingOffsetDeg = 0.0;
     private boolean lastr1 = false;
     private boolean lastl1 = false;
+    private ElapsedTime sensorTimer0 = new ElapsedTime();
+    private ElapsedTime sensorTimer1 = new ElapsedTime();
+    private ElapsedTime sensorTimer2 = new ElapsedTime();
+
+    private ElapsedTime currentTimer = new ElapsedTime();
+    private boolean latch0 = false, latch1 = false, latch2 = false;
 
     private TurretState turretState = TurretState.NORMAL;
 
@@ -176,6 +186,10 @@ public class V2RED extends DbzOpMode {
     private boolean dipDone = false;
     private ElapsedTime dipTimer = new ElapsedTime();
 
+    // --- 3-ball hold-then-push delay ---
+    private ElapsedTime holdDelayTimer = new ElapsedTime();
+    private boolean waitingForHold = false;
+
     private double maxVel = 1900;
     private boolean useRpmMaxVel = false;
     private boolean lastDpadUpG1 = false;
@@ -183,6 +197,9 @@ public class V2RED extends DbzOpMode {
 
     private boolean lastDpadUpG2 = false;
     private boolean lastDpadDownG2 = false;
+
+    private double desiredHoldPos = holdOpenPos;
+    private boolean manualHoldOverride = false;
 
     @Override
     public void opInit() {
@@ -204,7 +221,8 @@ public class V2RED extends DbzOpMode {
         baseHoodPos = hoodServoPos;
         hoodServo.setPosition(baseHoodPos);
 
-        holdServo.setPosition(holdClosePos);
+        desiredHoldPos = holdOpenPos;
+        holdServo.setPosition(desiredHoldPos);
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
 
@@ -290,10 +308,12 @@ public class V2RED extends DbzOpMode {
         boolean dpadDownG2 = gamepad2.dpad_down;
 
         if (dpadUpG2 && !lastDpadUpG2) {
-            holdServo.setPosition(holdOpenPos);
+            manualHoldOverride = true;
+            desiredHoldPos = holdOpenPos;
         }
         if (dpadDownG2 && !lastDpadDownG2) {
-            holdServo.setPosition(holdClosePos);
+            manualHoldOverride = true;
+            desiredHoldPos = holdClosePos;
         }
 
         lastDpadUpG2 = dpadUpG2;
@@ -326,9 +346,10 @@ public class V2RED extends DbzOpMode {
         applyHoodAndVelocityRegressions();
         dipshot();
 
-        checkThreeBallsAndLock();
+        runBallDetection();
         shootFastOnly();
         activeIntake();
+        updateHoldServoOutput();
 
         Pose ppose = follower.getPose();
         if (ppose != null) {
@@ -341,7 +362,7 @@ public class V2RED extends DbzOpMode {
         }
 
         if (dbzGamepad1.x) {
-            follower.setPose(new Pose(9.76378, 8.661, Math.toRadians(180)));
+            follower.setPose(new Pose(129, 80, Math.toRadians(0)));
             turretHeadingOffsetDeg = 0.0;
         }
         if (dbzGamepad1.y) {
@@ -390,67 +411,70 @@ public class V2RED extends DbzOpMode {
         }
     }
 
-    private void checkThreeBallsAndLock() {
-        double dist = distancez.getVoltage();
+    private void runBallDetection() {
+        double dist  = distancez.getVoltage();
         double dist1 = distance1.getVoltage();
         double dist2 = distance2.getVoltage();
 
-        boolean detected = dist < dthresh;
-        boolean detected1 = dist1 < dthresh1;
-        boolean detected2 = dist2 < dthresh2;
+        if (dist  < dthresh)  { latch0 = true; sensorTimer0.reset(); }
+        if (dist1 < dthresh1) { latch1 = true; sensorTimer1.reset(); }
+        if (dist2 < dthresh2) { latch2 = true; sensorTimer2.reset(); }
 
-        telemetryM.addData("Distance Voltage", String.format("%.3f", dist));
-        telemetryM.addData("Distance Voltage1", String.format("%.3f", dist1));
-        telemetryM.addData("Distance Voltage2", String.format("%.3f", dist2));
-        telemetryM.addData("Ball Detected", detected ? "YES" : "NO");
-        telemetryM.addData("Ball Detected", detected1 ? "YES" : "NO");
-        telemetryM.addData("Ball Detected", detected2 ? "YES" : "NO");
-        telemetryM.addData("Ball State", ballState.name());
+        if (sensorTimer0.seconds() > sensorStickyWindow) latch0 = false;
+        if (sensorTimer1.seconds() > sensorStickyWindow) latch1 = false;
+        if (sensorTimer2.seconds() > sensorStickyWindow) latch2 = false;
+
+        boolean detected = latch0 && latch1 && latch2;
 
         switch (ballState) {
-
             case IDLE:
-                if (detected && detected1 && detected2 && !shooting) {
+                if (detected && !shooting) {
                     if (!wasDetected) {
                         detectionTimer.reset();
-                        ballReverseTimer.reset();
                         wasDetected = true;
                     }
-                    gamepad1.rumble(1000);
-                    holdServo.setPosition(holdClosePos);
-                    leftpushServo.setPosition(lock);
-                    rightpushServo.setPosition(lock - servooffset);
-                    intakeMotor.setPower(-1);
-                    ballReverseTimer.reset();
-                    threeBallsLocked = true;
-                    ballState = BallState.REVERSING;
-                    wasDetected = false;
-                } else {
+                    if (detectionTimer.seconds() >= 0.2) {
+                        latch0 = false; latch1 = false; latch2 = false;
+                        manualHoldOverride = false;
+                        desiredHoldPos = holdClosePos;
+                        leftpushServo.setPosition(lock);
+                        rightpushServo.setPosition(lock - servooffset);
+                        intakeMotor.setPower(-1);
+                        ballReverseTimer.reset();
+                        ballState = BallState.REVERSING;
+                        wasDetected = false;
+                        threeBallsLocked = true;
+                    }
+                } else if (!detected) {
                     wasDetected = false;
                     threeBallsLocked = false;
                 }
                 break;
 
             case REVERSING:
-                if (!shooting && ballReverseTimer.seconds() < 1.0) {
-                    holdServo.setPosition(holdClosePos);
+                manualHoldOverride = false;
+                desiredHoldPos = holdClosePos;
+                if (!shooting && ballReverseTimer.seconds() < 3.0) {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                     intakeMotor.setPower(-1);
                 }
-
-                if (ballReverseTimer.seconds() >= 1.0) {
-                    intakeMotor.setPower(1);
+                if (ballReverseTimer.seconds() >= 0.5) {
+                    desiredHoldPos = holdOpenPos;
+                }
+                if (ballReverseTimer.seconds() >= 3.0) {
+                    intakeMotor.setPower(-1);
+                    leftpushServo.setPosition(Push0);
+                    rightpushServo.setPosition(Push0 - servooffset);
                     ballState = BallState.LOCKED;
                 }
                 break;
 
             case LOCKED:
-                if (!shooting) {
-                    leftpushServo.setPosition(lock);
-                    rightpushServo.setPosition(lock - servooffset);
+                leftpushServo.setPosition(lock);
+                rightpushServo.setPosition(lock - servooffset);
+                if (shooting) {
                     intakeMotor.setPower(1);
-                    wasDetected = false;
                 }
                 break;
         }
@@ -513,7 +537,7 @@ public class V2RED extends DbzOpMode {
         double vy = (vel != null) ? vel.getYComponent() : 0.0;
 
         double speed = Math.hypot(vx, vy);
-        if (speed < 1.5) {
+        if (speed < 20) {
             vx = 0;
             vy = 0;
         }
@@ -530,67 +554,120 @@ public class V2RED extends DbzOpMode {
     private void shootFastOnly() {
         boolean rightTriggerHeld = dbzGamepad1.right_trigger > 0.1;
         boolean fastshoot = moveshoot;
+
         if (!fastshoot) {
             if (rightTriggerHeld && !shootLast && !shooting) {
-                holdServo.setPosition(holdOpenPos);
-                leftpushServo.setPosition(Push1);
-                rightpushServo.setPosition(Push1 - servooffset);
+                // Capture 3-ball state and whether hold is already open BEFORE clearing anything
+                boolean hadThreeBalls = threeBallsLocked;
+                boolean holdAlreadyOpen = holdServo.getPosition() >= holdOpenPos - 0.01;
+
+                manualHoldOverride = false;
+                desiredHoldPos = holdOpenPos;
                 intaketimer.reset();
                 shooting = true;
                 threeBallsLocked = false;
                 holdOpened = false;
-                intaketimer.reset();
-                shooting = true;
+                dipActive = false;
+                dipDone = false;
+
+                if (hadThreeBalls && !holdAlreadyOpen) {
+                    // Hold was closed — open it first, then wait 200 ms before pushing
+                    waitingForHold = true;
+                    holdDelayTimer.reset();
+                } else {
+                    // No 3-ball lock OR hold was already open — push immediately
+                    waitingForHold = false;
+                    leftpushServo.setPosition(Push1);
+                    rightpushServo.setPosition(Push1 - servooffset);
+                    intaketimer.reset(); // timing starts from the actual push
+                }
             }
-            if (shooting && intaketimer.milliseconds() > shotreturn) {
-                leftpushServo.setPosition(Push0);
-                rightpushServo.setPosition(Push0 - servooffset);
-                holdServo.setPosition(holdClosePos);
-                shooting = false;
-                resetAfterShooting();
-            } else if (shooting && intaketimer.milliseconds() > shot2) {
-                leftpushServo.setPosition(Push3);
-                rightpushServo.setPosition(Push3 - servooffset);
-            } else if (shooting && intaketimer.milliseconds() > shot1) {
-                leftpushServo.setPosition(Push2);
-                rightpushServo.setPosition(Push2 - servooffset);
+
+            if (shooting && waitingForHold) {
+                // Hold servo is moving to open; push only after 200 ms
+                if (holdDelayTimer.milliseconds() >= 200) {
+                    waitingForHold = false;
+                    leftpushServo.setPosition(Push1);
+                    rightpushServo.setPosition(Push1 - servooffset);
+                    intaketimer.reset(); // shot sequence timing starts now
+                }
+                // Don't advance push stages while still waiting
+            } else if (shooting) {
+                if (intaketimer.milliseconds() > shotreturn) {
+                    leftpushServo.setPosition(Push0);
+                    rightpushServo.setPosition(Push0 - servooffset);
+                    desiredHoldPos = holdClosePos;
+                    shooting = false;
+                    resetAfterShooting();
+                } else if (intaketimer.milliseconds() > shot2) {
+                    leftpushServo.setPosition(Push3);
+                    rightpushServo.setPosition(Push3 - servooffset);
+                } else if (intaketimer.milliseconds() > shot1) {
+                    leftpushServo.setPosition(Push2);
+                    rightpushServo.setPosition(Push2 - servooffset);
+                }
             }
+
         } else {
+            // moveshoot path
             if (rightTriggerHeld && !shootLast && !shooting) {
+                boolean hadThreeBalls = threeBallsLocked;
+                boolean holdAlreadyOpen = holdServo.getPosition() >= holdOpenPos - 0.01;
+
                 threeBallsLocked = false;
                 holdOpened = false;
-
-                holdServo.setPosition(holdOpenPos);
-
-                leftpushServo.setPosition(Push3);
-                rightpushServo.setPosition(Push3 - servooffset);
-
+                manualHoldOverride = false;
+                desiredHoldPos = holdOpenPos;
                 intaketimer.reset();
-
                 shooting = true;
                 dipActive = false;
                 dipDone = false;
+
+                if (hadThreeBalls && !holdAlreadyOpen) {
+                    waitingForHold = true;
+                    holdDelayTimer.reset();
+                } else {
+                    waitingForHold = false;
+                    leftpushServo.setPosition(Push3);
+                    rightpushServo.setPosition(Push3 - servooffset);
+                    intaketimer.reset();
+                }
             }
 
-            if (shooting && intaketimer.milliseconds() > 700) {
+            if (shooting && waitingForHold) {
+                if (holdDelayTimer.milliseconds() >= 200) {
+                    waitingForHold = false;
+                    leftpushServo.setPosition(Push3);
+                    rightpushServo.setPosition(Push3 - servooffset);
+                    intaketimer.reset();
+                }
+            } else if (shooting && intaketimer.milliseconds() > 700) {
                 leftpushServo.setPosition(Push0);
                 rightpushServo.setPosition(Push0 - servooffset);
-                holdServo.setPosition(holdClosePos);
+                desiredHoldPos = holdClosePos;
                 shooting = false;
                 resetAfterShooting();
+            }
+
+            if (!shooting) {
+                intaketimer.reset();
             }
 
             shootLast = rightTriggerHeld;
         }
+
+        shootLast = rightTriggerHeld;
         telemetry.addData("Fastshooting", fastshoot);
+        telemetry.addData("WaitingForHold", waitingForHold);
     }
 
     private void resetAfterShooting() {
         threeBallsLocked = false;
         holdOpened = false;
         ballState = BallState.IDLE;
-
-        holdServo.setPosition(holdClosePos);
+        manualHoldOverride = false;
+        desiredHoldPos = holdClosePos;
+        waitingForHold = false;
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
 
@@ -614,6 +691,28 @@ public class V2RED extends DbzOpMode {
             lastRightBumper = rb;
             lastLeftBumper = lb;
             return;
+        }
+
+        if (intakeMotor.getCurrent(CurrentUnit.AMPS) > intakecurrentthresh && currentTimer.seconds() > 0.2) {
+            leftpushServo.setPosition(lock);
+            rightpushServo.setPosition(lock - servooffset);
+
+            if (currentTimer.seconds() < 1) {
+                intakeReverseOn = true;
+                intakeForwardOn = false;
+                leftpushServo.setPosition(Push0);
+                rightpushServo.setPosition(Push0 - servooffset);
+            }
+            if (currentTimer.seconds() > 1) {
+                intakeReverseOn = false;
+                intakeForwardOn = true;
+                leftpushServo.setPosition(Push0);
+                rightpushServo.setPosition(Push0 - servooffset);
+            }
+        }
+
+        if (intakeMotor.getCurrent(CurrentUnit.AMPS) < intakecurrentthresh) {
+            currentTimer.reset();
         }
 
         if (threeBallsLocked) {
@@ -648,6 +747,23 @@ public class V2RED extends DbzOpMode {
 
         lastRightBumper = rb;
         lastLeftBumper = lb;
+    }
+
+    private void updateHoldServoOutput() {
+        if (!manualHoldOverride) {
+            if (shooting) {
+                desiredHoldPos = holdOpenPos;
+            } else if (ballState == BallState.REVERSING) {
+                if (ballReverseTimer.seconds() >= 0.5) {
+                    desiredHoldPos = holdOpenPos;
+                } else {
+                    desiredHoldPos = holdClosePos;
+                }
+            } else if (ballState == BallState.LOCKED) {
+                desiredHoldPos = holdOpenPos;
+            }
+        }
+        holdServo.setPosition(desiredHoldPos);
     }
 
     private void aim() {
@@ -824,6 +940,7 @@ public class V2RED extends DbzOpMode {
         telemetry.addData("Turret/CurrentDeg", turretCurrentDegTelem);
         telemetry.addData("Turret/ErrorDeg", angleWrap(turretTargetDegTelem - turretCurrentDegTelem));
         telemetry.addData("Turret/AtTarget", atTTarget);
+        telemetry.addData("Intake Current", String.format("%.2f", intakeMotor.getCurrent(CurrentUnit.AMPS)));
 
         telemetry.addData("Flywheel/TargetVel", flyTargetVelTelem);
         telemetry.addData("Flywheel/CurrentVel", flyCurrentVelTelem);
@@ -832,6 +949,9 @@ public class V2RED extends DbzOpMode {
 
         telemetry.addData("MaxVel Mode", useRpmMaxVel ? "RPM" : "1900");
         telemetry.addData("MaxVel", maxVel);
+        telemetry.addData("Hold/Desired", desiredHoldPos);
+        telemetry.addData("Hold/ManualOverride", manualHoldOverride);
+        telemetry.addData("Hold/BallState", ballState);
     }
 
     @Override
