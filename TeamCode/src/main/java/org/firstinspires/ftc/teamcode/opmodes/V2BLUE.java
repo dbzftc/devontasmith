@@ -25,7 +25,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.auton.Constants;
+import org.firstinspires.ftc.teamcode.auton.ConstantsTele;
 import org.firstinspires.ftc.teamcode.extensions.DbzHardwareMap;
 import org.firstinspires.ftc.teamcode.extensions.DbzOpMode;
 
@@ -113,7 +113,7 @@ public class V2BLUE extends DbzOpMode {
     public static double turretDeadbandDeg = 0.0;
     public static double turretMaxPower = 1.0;
 
-    public static double turretKs = 0.00;
+    public static double turretKs = 0.01;
     public static double turretFFDeadbandDeg = 0.0;
 
     public static double turretoffset = 3.0;
@@ -137,7 +137,7 @@ public class V2BLUE extends DbzOpMode {
     private boolean autoHoodActive = true;
     private boolean lastAButton = false;
 
-    private boolean aimingActive = false;
+    private boolean aimingActive = true;
     private boolean leftTriggerLast = false;
 
     private boolean intakeForwardOn = false;
@@ -148,7 +148,7 @@ public class V2BLUE extends DbzOpMode {
 
     private PIDController turretPID;
 
-    private boolean moveshoot = false;
+    private boolean moveshoot = true;
     private boolean lastshoot = false;
 
     private double turretHeadingOffsetDeg = 0.0;
@@ -172,6 +172,11 @@ public class V2BLUE extends DbzOpMode {
     private boolean lastSnapButton = false;
 
     private double targetVelocity = 0.0;
+
+    private boolean lastRightBumperG2 = false;
+    private boolean lastLeftBumperG2 = false;
+    private boolean g2IntakeForwardOn = false;
+    private boolean g2IntakeReverseOn = false;
 
     private double turretTargetDegTelem = 0.0;
     private double turretCurrentDegTelem = 0.0;
@@ -221,7 +226,7 @@ public class V2BLUE extends DbzOpMode {
         baseHoodPos = hoodServoPos;
         hoodServo.setPosition(baseHoodPos);
 
-        desiredHoldPos = holdOpenPos;
+        desiredHoldPos = holdClosePos;
         holdServo.setPosition(desiredHoldPos);
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
@@ -250,7 +255,7 @@ public class V2BLUE extends DbzOpMode {
 
         turretEncoder = hardwareMap.get(AnalogInput.class, "turretEncoder");
 
-        follower = Constants.createFollower(hardwareMap);
+        follower = ConstantsTele.createFollower(hardwareMap);
         follower.setStartingPose(org.firstinspires.ftc.teamcode.opmodes.PoseCache.lastPose);
 
         velocityTimer.reset();
@@ -319,8 +324,8 @@ public class V2BLUE extends DbzOpMode {
         lastDpadUpG2 = dpadUpG2;
         lastDpadDownG2 = dpadDownG2;
 
-        boolean rightStickPress = gamepad2.right_stick_button;
-        boolean leftStickPress = gamepad2.left_stick_button;
+        boolean rightStickPress = gamepad2.right_bumper;
+        boolean leftStickPress = gamepad2.right_bumper;
 
         if (rightStickPress && !lastr1) turretHeadingOffsetDeg -= turretoffset;
         if (leftStickPress && !lastl1) turretHeadingOffsetDeg += turretoffset;
@@ -334,10 +339,12 @@ public class V2BLUE extends DbzOpMode {
         }
         lastSnapButton = snap;
 
+        double mult = gamepad1.left_trigger > 0.1 ? 0.3 : 1;
+
         follower.setTeleOpDrive(
-                -gamepad1.left_stick_y,
-                -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x,
+                -gamepad1.left_stick_y * mult,
+                -gamepad1.left_stick_x * mult,
+                -gamepad1.right_stick_x * mult,
                 true
         );
 
@@ -362,7 +369,7 @@ public class V2BLUE extends DbzOpMode {
         }
 
         if (dbzGamepad1.x) {
-            follower.setPose(new Pose(129, 80, Math.toRadians(0)));
+            follower.setPose(new Pose(15, 111, Math.toRadians(90)));
             turretHeadingOffsetDeg = 0.0;
         }
         if (dbzGamepad1.y) {
@@ -401,6 +408,10 @@ public class V2BLUE extends DbzOpMode {
 
         if (newPos != 0.0 && newPos != 0.722) {
             newPos = 0.0;
+        }
+
+        if(intakeReverseOn || g2IntakeReverseOn){
+            newPos = 0.277;
         }
 
         newPos = Math.round(newPos * 1000.0) / 1000.0;
@@ -537,13 +548,17 @@ public class V2BLUE extends DbzOpMode {
         double vy = (vel != null) ? vel.getYComponent() : 0.0;
 
         double speed = Math.hypot(vx, vy);
-        if (speed < 20) {
+        if (speed < 1.5) {
             vx = 0;
             vy = 0;
         }
 
+
+
+
         double dist = Math.hypot(goalx - robotPose.getX(), goaly - robotPose.getY());
         double shotTime = (timeA * dist * dist) + (timeB * dist) + timeC;
+
 
         double vGoalX = goalx - (vx * shotTime);
         double vGoalY = goaly - (vy * shotTime);
@@ -662,6 +677,7 @@ public class V2BLUE extends DbzOpMode {
     }
 
     private void resetAfterShooting() {
+
         threeBallsLocked = false;
         holdOpened = false;
         ballState = BallState.IDLE;
@@ -671,12 +687,44 @@ public class V2BLUE extends DbzOpMode {
         leftpushServo.setPosition(Push0);
         rightpushServo.setPosition(Push0 - servooffset);
 
+        g2IntakeForwardOn = false;
+        g2IntakeReverseOn = false;
+
         intakeForwardOn = true;
         intakeReverseOn = false;
+
+
         intakeMotor.setPower(1);
     }
 
     private void activeIntake() {
+
+        boolean rb2 = gamepad2.right_bumper;
+        boolean lb2 = gamepad2.left_bumper;
+
+        if (rb2 && !lastRightBumperG2) {
+            g2IntakeForwardOn = !g2IntakeForwardOn;
+            g2IntakeReverseOn = false;
+        }
+        if (lb2 && !lastLeftBumperG2) {
+            g2IntakeReverseOn = !g2IntakeReverseOn;
+            g2IntakeForwardOn = false;
+        }
+        lastRightBumperG2 = rb2;
+        lastLeftBumperG2 = lb2;
+
+        if (g2IntakeForwardOn) {
+            intakeMotor.setPower(1);
+            lastRightBumper = gamepad1.right_bumper;
+            lastLeftBumper = gamepad1.left_bumper;
+            return;
+        } else if (g2IntakeReverseOn) {
+            intakeMotor.setPower(-1);
+            lastRightBumper = gamepad1.right_bumper;
+            lastLeftBumper = gamepad1.left_bumper;
+            return;
+        }
+
         if (ballState == BallState.REVERSING || ballState == BallState.LOCKED) {
             lastRightBumper = gamepad1.right_bumper;
             lastLeftBumper = gamepad1.left_bumper;
@@ -693,27 +741,9 @@ public class V2BLUE extends DbzOpMode {
             return;
         }
 
-        if (intakeMotor.getCurrent(CurrentUnit.AMPS) > intakecurrentthresh && currentTimer.seconds() > 0.2) {
-            leftpushServo.setPosition(lock);
-            rightpushServo.setPosition(lock - servooffset);
 
-            if (currentTimer.seconds() < 1) {
-                intakeReverseOn = true;
-                intakeForwardOn = false;
-                leftpushServo.setPosition(Push0);
-                rightpushServo.setPosition(Push0 - servooffset);
-            }
-            if (currentTimer.seconds() > 1) {
-                intakeReverseOn = false;
-                intakeForwardOn = true;
-                leftpushServo.setPosition(Push0);
-                rightpushServo.setPosition(Push0 - servooffset);
-            }
-        }
 
-        if (intakeMotor.getCurrent(CurrentUnit.AMPS) < intakecurrentthresh) {
-            currentTimer.reset();
-        }
+
 
         if (threeBallsLocked) {
             intakeMotor.setPower(-1);
@@ -767,12 +797,12 @@ public class V2BLUE extends DbzOpMode {
     }
 
     private void aim() {
-        boolean leftTriggerPressed = dbzGamepad1.left_trigger > 0.1;
+        boolean leftTriggerPressed = gamepad1.dpad_right;
         if (leftTriggerPressed && !leftTriggerLast) {
             aimingActive = !aimingActive;
             turretPID.reset();
         }
-        leftTriggerLast = leftTriggerPressed;
+        leftTriggerLast = gamepad1.dpad_right;
 
         double targetAngleDeg;
 

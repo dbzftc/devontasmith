@@ -78,7 +78,7 @@ public class REDAUTOV2 extends DbzOpMode {
     public static double startX = 114.2417;
     public static double startY = 133.472;
     public static double gatex = 147.1;
-    public static double gatey = 60.2;
+    public static double gatey = 59.2;
     public static double gateh = 24;
 
 
@@ -162,12 +162,12 @@ public class REDAUTOV2 extends DbzOpMode {
                     .setTangentHeadingInterpolation() .build();
 
             Path2 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(98.149, 83.168), new Pose(99.885, 55), new Pose(131.544, 59.950)))
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                            new BezierCurve(new Pose(98.149, 83.168), new Pose(110.51829161451816, 62.02878598247808), new Pose(130.64287359199, 54.18279098873591)))
+                    .setTangentHeadingInterpolation().build();
 
             Path3 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(131.544, 59.950), new Pose(90, 55), new Pose(97.149, 77.168)))
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                            new BezierLine(new Pose(130.64287359199, 54.18279098873591), new Pose(97.149, 77.168)))
+                    .setTangentHeadingInterpolation().setReversed().build();
 
             Path4 = follower.pathBuilder().addPath(
                             new BezierCurve(new Pose(97.149, 77.168), new Pose(110.990, 60.361), new Pose(gatex, gatey)))
@@ -223,10 +223,11 @@ public class REDAUTOV2 extends DbzOpMode {
 
 
             Path12 = follower.pathBuilder().addPath(
-                            new BezierLine(
+                            new BezierCurve(
                                     new Pose(85.149, 84.168),
-                              //      new Pose(112.11645932415522, 32.77986983729663),
-                                    new Pose(136.4305381727159, 11.71464330413016)
+                                    new Pose(105.25156445556946, 40.73091364205258),
+                                    //      new Pose(112.11645932415522, 32.77986983729663),
+                                    new Pose(133.54693366708383, 28.59198998748437)
                             )
                     ).setTangentHeadingInterpolation()
 
@@ -239,7 +240,7 @@ public class REDAUTOV2 extends DbzOpMode {
                                     new Pose(127.207, 35.159),
 
 
-                                    new Pose(96, 112)
+                                    new Pose(96.5, 112.5)
                             )
                     ).setTangentHeadingInterpolation()
                     .setReversed()
@@ -262,8 +263,8 @@ public class REDAUTOV2 extends DbzOpMode {
 
     private Follower follower;
 
-    public static double reversedebounce = 1.7;
-    public static double lockdebounce = 1.4;
+    public static double reversedebounce = 1.3;
+    public static double lockdebounce = 1.1;
     private Paths paths;
 
 
@@ -477,10 +478,12 @@ public class REDAUTOV2 extends DbzOpMode {
                 if(stateTimer.seconds()>0.4){
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
-                    holdServo.setPosition(holdOpenPos);
                 }
-                if (stateTimer.seconds() >= 0.8) {
+                if (stateTimer.seconds() >= 0.5) {
                     intakeMotor.setPower(-1);
+                }
+                if (stateTimer.seconds() > 0.8) {
+                    holdServo.setPosition(holdOpenPos);
                 }
                 if (!follower.isBusy()) {
                     startShoot();
@@ -526,13 +529,13 @@ public class REDAUTOV2 extends DbzOpMode {
 
 
             case followPath7:
-                holdServo.setPosition(holdOpenPos);
                 if(stateTimer.seconds()> lockdebounce){
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                 }
                 if (stateTimer.seconds() >= reversedebounce) {
                     intakeMotor.setPower(-1);
+                    holdServo.setPosition(holdOpenPos);
                 }
                 if (!follower.isBusy()) {
                     startShoot();
@@ -579,13 +582,13 @@ public class REDAUTOV2 extends DbzOpMode {
 
 
             case followPath9:
-                holdServo.setPosition(holdOpenPos);
                 if(stateTimer.seconds()> lockdebounce){
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                 }
                 if (stateTimer.seconds() >= reversedebounce) {
                     intakeMotor.setPower(-1);
+                    holdServo.setPosition(holdOpenPos);
                     ;
                 }
                 if (!follower.isBusy()) {
@@ -633,21 +636,30 @@ public class REDAUTOV2 extends DbzOpMode {
                     endShoot();
                     follower.followPath(paths.Path12, true);
                     autonState = AutonState.followPath12;
+                    holdServo.setPosition(holdClosePos);
                 }
                 break;
 
 
             case followPath12:
+
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path13, true);
                     autonState = AutonState.followPath13;
+                    stateTimer.reset();
                 }
                 break;
 
 
             case followPath13:
-                holdServo.setPosition(holdOpenPos);
+                leftpushServo.setPosition(lock);
+                rightpushServo.setPosition(lock - servooffset);
+                if (stateTimer.seconds() > 0.3) {
+                    intakeMotor.setPower(-1);
+                    holdServo.setPosition(holdOpenPos);
+                }
                 if (!follower.isBusy()) {
+                    intakeMotor.setPower(1);
                     startShoot();
                     stateTimer.reset();
                     autonState = AutonState.shoot13;
@@ -779,15 +791,19 @@ public class REDAUTOV2 extends DbzOpMode {
         Pose vGoal = updateGoalV2(poseNow);
         double dist = Math.hypot(vGoal.getX() - poseNow.getX(), vGoal.getY() - poseNow.getY());
 
-        double hoodPos = 0.46;
-        double vel = 1520;
+        double hoodPos = 0.635;
+        double vel = 1700;
 
-        if (autonState == REDAUTOV2.AutonState.shoot13 || autonState == REDAUTOV2.AutonState.followPath13) {
-            hoodPos = 0.25;
-            vel = 1400;
-        } else {
-            hoodPos = 0.46;
-            vel = 1520;
+        if (autonState == AutonState.followPath12 || autonState == AutonState.shoot13 || autonState == AutonState.followPath13 || autonState == AutonState.done) {
+            baseHoodPos = 0.22;
+            vel = 1350;
+        } else if (autonState == AutonState.shoot1 || autonState == AutonState.followPath1) {
+            baseHoodPos = 0.5;
+            vel = 1600;
+        }
+        else {
+            baseHoodPos = 0.5;
+            vel = 1600;
         }
         double maxVel = outtake2Motor.getMotorType().getMaxRPM()
                 * outtake2Motor.getMotorType().getTicksPerRev() / 60.0;
@@ -946,8 +962,12 @@ public class REDAUTOV2 extends DbzOpMode {
         double rawAngle;
         if (autonState == REDAUTOV2.AutonState.shoot1 || (autonState == REDAUTOV2.AutonState.followPath1)) {
             rawAngle = 160;
+        } else if (autonState == REDAUTOV2.AutonState.shoot11 || autonState == AutonState.followPath11) {
+            rawAngle = 46;
+        } else if (autonState == AutonState.followPath3 || autonState == AutonState.shoot3) {
+            rawAngle = 85;
         } else if (autonState == REDAUTOV2.AutonState.shoot13 || autonState == REDAUTOV2.AutonState.followPath13) {
-            rawAngle = 95;
+            rawAngle = 100;
         } else {
             rawAngle = 53;
         }
