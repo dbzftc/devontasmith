@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.auton.Tuning.draw;
-import static org.firstinspires.ftc.teamcode.auton.Tuning.drawOnlyCurrent;
+
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -117,7 +116,7 @@ public class V2RED extends DbzOpMode {
     public static double turretKs = 0.01;
     public static double turretFFDeadbandDeg = 0.0;
 
-    public static double turretoffset = 3.0;
+    public static double turretoffset = 2.0;
     private AnalogInput distancez, distance1, distance2;
 
     private ElapsedTime velocityTimer = new ElapsedTime();
@@ -271,9 +270,7 @@ public class V2RED extends DbzOpMode {
         follower.update();
         follower.update();
 
-        if (follower.getCurrentPath() != null) {
-            drawOnlyCurrent();
-        }
+
 
         follower.startTeleopDrive();
     }
@@ -328,7 +325,7 @@ public class V2RED extends DbzOpMode {
         lastDpadDownG2 = dpadDownG2;
 
         boolean rightStickPress = gamepad2.right_bumper;
-        boolean leftStickPress = gamepad2.right_bumper;
+        boolean leftStickPress = gamepad2.left_bumper;
 
         if (rightStickPress && !lastr1) turretHeadingOffsetDeg -= turretoffset;
         if (leftStickPress && !lastl1) turretHeadingOffsetDeg += turretoffset;
@@ -383,9 +380,7 @@ public class V2RED extends DbzOpMode {
         aim();
         runFlywheelVelocityControl();
 
-        if (follower.getCurrentPath() != null) {
-            draw();
-        }
+
 
         sendGraphTelemetry();
 
@@ -694,37 +689,37 @@ public class V2RED extends DbzOpMode {
     }
 
     private void activeIntake() {
-
-        boolean rb2 = gamepad2.right_bumper;
-        boolean lb2 = gamepad2.left_bumper;
-
-        if (rb2 && !lastRightBumperG2) {
-            g2IntakeForwardOn = !g2IntakeForwardOn;
-            g2IntakeReverseOn = false;
-        }
-        if (lb2 && !lastLeftBumperG2) {
-            g2IntakeReverseOn = !g2IntakeReverseOn;
-            g2IntakeForwardOn = false;
-        }
-        lastRightBumperG2 = rb2;
-        lastLeftBumperG2 = lb2;
-
-        if (g2IntakeForwardOn) {
-            intakeMotor.setPower(1);
-            lastRightBumper = gamepad1.right_bumper;
-            lastLeftBumper = gamepad1.left_bumper;
-            return;
-        } else if (g2IntakeReverseOn) {
-            intakeMotor.setPower(-1);
-            lastRightBumper = gamepad1.right_bumper;
-            lastLeftBumper = gamepad1.left_bumper;
-            return;
-        }
-        if (ballState == BallState.REVERSING || ballState == BallState.LOCKED) {
-            lastRightBumper = gamepad1.right_bumper;
-            lastLeftBumper = gamepad1.left_bumper;
-            return;
-        }
+//
+//        boolean rb2 = gamepad2.right_bumper;
+//        boolean lb2 = gamepad2.left_bumper;
+//
+//        if (rb2 && !lastRightBumperG2) {
+//            g2IntakeForwardOn = !g2IntakeForwardOn;
+//            g2IntakeReverseOn = false;
+//        }
+//        if (lb2 && !lastLeftBumperG2) {
+//            g2IntakeReverseOn = !g2IntakeReverseOn;
+//            g2IntakeForwardOn = false;
+//        }
+//        lastRightBumperG2 = rb2;
+//        lastLeftBumperG2 = lb2;
+//
+//        if (g2IntakeForwardOn) {
+//            intakeMotor.setPower(1);
+//            lastRightBumper = gamepad1.right_bumper;
+//            lastLeftBumper = gamepad1.left_bumper;
+//            return;
+//        } else if (g2IntakeReverseOn) {
+//            intakeMotor.setPower(-1);
+//            lastRightBumper = gamepad1.right_bumper;
+//            lastLeftBumper = gamepad1.left_bumper;
+//            return;
+//        }
+//        if (ballState == BallState.REVERSING || ballState == BallState.LOCKED) {
+//            lastRightBumper = gamepad1.right_bumper;
+//            lastLeftBumper = gamepad1.left_bumper;
+//            return;
+//        }
 
         boolean rb = gamepad1.right_bumper;
         boolean lb = gamepad1.left_bumper;

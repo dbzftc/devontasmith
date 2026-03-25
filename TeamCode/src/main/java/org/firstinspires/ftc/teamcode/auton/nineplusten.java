@@ -122,11 +122,11 @@ public class nineplusten extends DbzOpMode {
 
         public Paths(Follower follower) {
             Path1 = follower.pathBuilder().addPath(
-                            new BezierLine(new Pose(111.417, 136.815), new Pose(98.149, 83.168)))
+                            new BezierLine(new Pose(111.417, 136.815), new Pose(97.149, 83.168)))
                     .setTangentHeadingInterpolation() .build();
 
             Path2 = follower.pathBuilder().addPath(
-                            new BezierCurve(new Pose(98.149, 83.168), new Pose(110.51829161451816, 62.02878598247808), new Pose(130.64287359199, 54.18279098873591)))
+                            new BezierCurve(new Pose(97.149, 83.168), new Pose(110.51829161451816, 62.02878598247808), new Pose(130.64287359199, 54.18279098873591)))
                     .setTangentHeadingInterpolation().build();
 
             Path3 = follower.pathBuilder().addPath(
@@ -347,10 +347,10 @@ public class nineplusten extends DbzOpMode {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                 }
-                if (stateTimer.seconds() >= 0.5) {
+                if (stateTimer.seconds() >= 0.6) {
                     intakeMotor.setPower(-1);
                 }
-                if (stateTimer.seconds() > 0.8) {
+                if (stateTimer.seconds() > 1) {
                     holdServo.setPosition(holdOpenPos);
                 }
                 if (ballState == nineplusten.BallState.locked || stateTimer.seconds() >= 0.4) {
@@ -368,10 +368,10 @@ public class nineplusten extends DbzOpMode {
                     leftpushServo.setPosition(lock);
                     rightpushServo.setPosition(lock - servooffset);
                 }
-                if (stateTimer.seconds() >= 0.5) {
+                if (stateTimer.seconds() >= 0.6) {
                     intakeMotor.setPower(-1);
                 }
-                if (stateTimer.seconds() > 0.8) {
+                if (stateTimer.seconds() > 1) {
                     holdServo.setPosition(holdOpenPos);
                 }
                 if (!follower.isBusy()) {
@@ -399,6 +399,7 @@ public class nineplusten extends DbzOpMode {
 
                 if (!follower.isBusy()) {
                     stateTimer.reset();
+                    holdServo.setPosition(holdClosePos);
 
                     autonState = nineplusten.AutonState.intakeWait2;
                 }
@@ -406,7 +407,16 @@ public class nineplusten extends DbzOpMode {
 
             case intakeWait2:
                 runBallDetection();
-
+                if(stateTimer.seconds()>0.4){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= 0.6) {
+                    intakeMotor.setPower(-1);
+                }
+                if (stateTimer.seconds() > 1) {
+                    holdServo.setPosition(holdOpenPos);
+                }
                 if (ballState == nineplusten.BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = nineplusten.BallState.idle;
 
@@ -423,6 +433,10 @@ public class nineplusten extends DbzOpMode {
                 }
                 if (stateTimer.seconds() >= reversedebounce) {
                     intakeMotor.setPower(-1);
+
+                }
+
+                if (stateTimer.seconds() > 1) {
                     holdServo.setPosition(holdOpenPos);
                 }
                 if (!follower.isBusy()) {
@@ -821,9 +835,9 @@ public class nineplusten extends DbzOpMode {
         } else if (autonState == AutonState.shoot13 || autonState == AutonState.followPath13) {
             rawAngle = 73;
         } else if (autonState == nineplusten.AutonState.followPath3 || autonState == nineplusten.AutonState.shoot3) {
-            rawAngle = 85;
+            rawAngle = 90;
         } else {
-            rawAngle = 52;
+            rawAngle = 51;
         }
 
 

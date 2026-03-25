@@ -398,6 +398,7 @@ public class nineplustenblue extends DbzOpMode {
 
                 if (!follower.isBusy()) {
                     stateTimer.reset();
+                    holdServo.setPosition(holdClosePos);
 
                     autonState = AutonState.intakeWait2;
                 }
@@ -405,6 +406,18 @@ public class nineplustenblue extends DbzOpMode {
 
             case intakeWait2:
                 runBallDetection();
+
+
+                if(stateTimer.seconds()>0.4){
+                    leftpushServo.setPosition(lock);
+                    rightpushServo.setPosition(lock - servooffset);
+                }
+                if (stateTimer.seconds() >= 0.5) {
+                    intakeMotor.setPower(-1);
+                }
+                if (stateTimer.seconds() > 0.8) {
+                    holdServo.setPosition(holdOpenPos);
+                }
 
                 if (ballState == BallState.locked || stateTimer.seconds() >= intakeWaitTimeout) {
                     ballState = BallState.idle;
@@ -813,13 +826,13 @@ public class nineplustenblue extends DbzOpMode {
     private double overshoot() {
         double rawAngle;
         if (autonState == AutonState.shoot1 || (autonState == AutonState.followPath1)) {
-            rawAngle = -152;
+            rawAngle = -150;
         } else if (autonState == AutonState.shoot13 || autonState == AutonState.followPath13) {
-            rawAngle = -70;
+            rawAngle = -68;
         } else if (autonState == nineplustenblue.AutonState.followPath3 || autonState == nineplustenblue.AutonState.shoot3) {
-            rawAngle = -88;
+            rawAngle = -79;
         }else {
-            rawAngle = -45;
+            rawAngle = -43.5;
         }
 
         double desired = angleWrapAsym(rawAngle, threshold);

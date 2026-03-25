@@ -406,9 +406,7 @@ public class _blueside extends DbzOpMode {
         aim();
         runFlywheelVelocityControl();
 
-        if (follower.getCurrentPath() != null) {
-            draw();
-        }
+
 
         addDebugTelemetry();
 
